@@ -298,8 +298,20 @@ window.addEventListener('pointermove', (e) => {
   if (isDraggingSphere) {
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
-      sphereMesh.position.x = planeIntersection.x;
-      sphereMesh.position.z = planeIntersection.z;
+      let targetX = planeIntersection.x;
+      let targetZ = planeIntersection.z;
+
+      // Limit max sphere displacement based on pinning elasticity
+      if (clothSim.pinMode === 'top-4-corners') {
+        targetZ = Math.max(-1.2, Math.min(1.4, targetZ));
+        targetX = Math.max(-2.6, Math.min(2.6, targetX));
+      } else if (clothSim.pinMode === 'top-edge' || clothSim.pinMode === 'top-2-corners') {
+        targetZ = Math.max(-3.0, Math.min(3.0, targetZ));
+        targetX = Math.max(-3.5, Math.min(3.5, targetX));
+      }
+
+      sphereMesh.position.x = targetX;
+      sphereMesh.position.z = targetZ;
 
       clothSim.spherePos.x = sphereMesh.position.x;
       clothSim.spherePos.y = sphereMesh.position.y;
@@ -322,7 +334,7 @@ window.addEventListener('pointermove', (e) => {
         const q = new THREE.Quaternion().setFromUnitVectors(up, dirVec);
         windArrowGroup.setRotationFromQuaternion(q);
 
-        const shaftLen = Math.max(0.5, len);
+        const shaftLen = Math.max(0.5, Math.min(3.5, len));
         shaftMesh.scale.set(1, shaftLen, 1);
         coneMesh.position.set(0, shaftLen, 0);
 
@@ -333,7 +345,7 @@ window.addEventListener('pointermove', (e) => {
         clothSim.windAngle = angleDeg;
         clothSim.windEnabled = true;
 
-        const windForceMag = Math.min(len * 2.5, 30.0);
+        const windForceMag = Math.min(len * 2.0, 12.0);
         clothSim.mouseWind.x = dirVec.x * windForceMag;
         clothSim.mouseWind.y = dirVec.y * windForceMag;
         clothSim.mouseWind.z = dirVec.z * windForceMag;

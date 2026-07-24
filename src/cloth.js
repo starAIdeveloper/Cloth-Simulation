@@ -122,7 +122,6 @@ export class ClothSimulator {
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
     this.spherePos = { x: 0, y: -1.2, z: 0.8 };
-    this.prevSpherePos = { x: 0, y: -1.2, z: 0.8 };
 
     this.floorEnabled = true;
     this.floorY = -4.0;
@@ -284,13 +283,10 @@ export class ClothSimulator {
         nz = dz / dist;
       }
 
-      // Position particle strictly outside sphere radius
       particle.x = currentSpherePos.x + nx * effectiveRadius;
       particle.y = currentSpherePos.y + ny * effectiveRadius;
       particle.z = currentSpherePos.z + nz * effectiveRadius;
 
-      // Project Verlet velocity (oldX, oldY, oldZ) onto the sphere surface
-      // Zero out inward velocity vector to prevent tunneling
       const vx = particle.x - particle.oldX;
       const vy = particle.y - particle.oldY;
       const vz = particle.z - particle.oldZ;
@@ -323,6 +319,12 @@ export class ClothSimulator {
     const rad = (this.windAngle * Math.PI) / 180;
     const windDirX = Math.cos(rad);
     const windDirZ = Math.sin(rad);
+
+    // Limit maximum mouse wind force to prevent physical instability
+    const maxWind = 12.0;
+    this.mouseWind.x = Math.max(-maxWind, Math.min(maxWind, this.mouseWind.x));
+    this.mouseWind.y = Math.max(-maxWind, Math.min(maxWind, this.mouseWind.y));
+    this.mouseWind.z = Math.max(-maxWind, Math.min(maxWind, this.mouseWind.z));
 
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
@@ -389,10 +391,6 @@ export class ClothSimulator {
         this.applySphereCollision(p, effectiveRadius, this.spherePos);
       }
     }
-
-    this.prevSpherePos.x = this.spherePos.x;
-    this.prevSpherePos.y = this.spherePos.y;
-    this.prevSpherePos.z = this.spherePos.z;
   }
 
   updatePositionBuffer(positions) {
