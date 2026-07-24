@@ -85,6 +85,9 @@ export class UIController {
 
     this.bindSlider('sld-wind-angle', 'val-wind-angle', (val) => {
       this.clothSim.windAngle = parseFloat(val);
+      if (this.sceneCallbacks.updateWindAngleUI) {
+        this.sceneCallbacks.updateWindAngleUI(parseFloat(val));
+      }
     }, (v) => `${v}°`);
 
     const chkTurbulence = document.getElementById('chk-wind-turbulence');
@@ -92,41 +95,10 @@ export class UIController {
       this.clothSim.windTurbulence = e.target.checked;
     });
 
-    this.bindSlider('sld-sphere-radius', 'val-sphere-radius', (val) => {
-      const r = parseFloat(val);
-      this.clothSim.sphereRadius = r;
-      if (this.sceneCallbacks.updateSphereScale) {
-        this.sceneCallbacks.updateSphereScale(r);
-      }
-    }, (v) => parseFloat(v).toFixed(1));
-
-    this.bindSlider('sld-sphere-pos-x', 'val-sphere-pos-x', (val) => {
-      const x = parseFloat(val);
-      this.clothSim.spherePos.x = x;
-      if (this.sceneCallbacks.updateSpherePos) {
-        this.sceneCallbacks.updateSpherePos(this.clothSim.spherePos);
-      }
-    }, (v) => parseFloat(v).toFixed(1));
-
-    this.bindSlider('sld-sphere-pos-z', 'val-sphere-pos-z', (val) => {
-      const z = parseFloat(val);
-      this.clothSim.spherePos.z = z;
-      if (this.sceneCallbacks.updateSpherePos) {
-        this.sceneCallbacks.updateSpherePos(this.clothSim.spherePos);
-      }
-    }, (v) => parseFloat(v).toFixed(1));
-
     const selRender = document.getElementById('sel-render-mode');
     selRender.addEventListener('change', (e) => {
       if (this.sceneCallbacks.setRenderMode) {
         this.sceneCallbacks.setRenderMode(e.target.value);
-      }
-    });
-
-    const colCloth = document.getElementById('col-cloth');
-    colCloth.addEventListener('input', (e) => {
-      if (this.sceneCallbacks.setClothColor) {
-        this.sceneCallbacks.setClothColor(e.target.value);
       }
     });
 
@@ -151,19 +123,12 @@ export class UIController {
     });
   }
 
-  syncSpherePosUI(pos) {
-    const sldX = document.getElementById('sld-sphere-pos-x');
-    const valX = document.getElementById('val-sphere-pos-x');
-    const sldZ = document.getElementById('sld-sphere-pos-z');
-    const valZ = document.getElementById('val-sphere-pos-z');
-
-    if (sldX && valX) {
-      sldX.value = pos.x;
-      valX.textContent = pos.x.toFixed(1);
-    }
-    if (sldZ && valZ) {
-      sldZ.value = pos.z;
-      valZ.textContent = pos.z.toFixed(1);
+  syncWindAngleUI(angleDeg) {
+    const sldAngle = document.getElementById('sld-wind-angle');
+    const valAngle = document.getElementById('val-wind-angle');
+    if (sldAngle && valAngle) {
+      sldAngle.value = Math.round(angleDeg) % 360;
+      valAngle.textContent = `${Math.round(angleDeg) % 360}°`;
     }
   }
 
