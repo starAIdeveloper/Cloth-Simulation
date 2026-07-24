@@ -8,7 +8,7 @@ canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x2d313b);
-scene.fog = new THREE.FogExp2(0x2d313b, 0.012);
+scene.fog = new THREE.FogExp2(0x2d313b, 0.015);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -45,14 +45,14 @@ const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
 const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
-dirLight.position.set(12, 22, 16);
+dirLight.position.set(10, 18, 14);
 dirLight.castShadow = true;
-dirLight.shadow.mapSize.width = 4096;
-dirLight.shadow.mapSize.height = 4096;
+dirLight.shadow.mapSize.width = 2048;
+dirLight.shadow.mapSize.height = 2048;
 dirLight.shadow.camera.near = 0.5;
-dirLight.shadow.camera.far = 80;
+dirLight.shadow.camera.far = 60;
 
-const shadowBounds = 35;
+const shadowBounds = 18;
 dirLight.shadow.camera.left = -shadowBounds;
 dirLight.shadow.camera.right = shadowBounds;
 dirLight.shadow.camera.top = shadowBounds;
@@ -61,11 +61,12 @@ dirLight.shadow.bias = -0.0003;
 scene.add(dirLight);
 
 const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.4);
-fillLight.position.set(-12, 8, -10);
+fillLight.position.set(-10, 6, -8);
 scene.add(fillLight);
 
+// Smaller Studio Floor Plane (28x28 unit size)
 const floorY = -4.0;
-const floorGeo = new THREE.PlaneGeometry(100, 100);
+const floorGeo = new THREE.PlaneGeometry(28, 28);
 const floorMat = new THREE.MeshStandardMaterial({
   color: 0xc8d0e0,
   roughness: 0.6,
@@ -146,20 +147,69 @@ clothMesh.castShadow = true;
 clothMesh.receiveShadow = true;
 scene.add(clothMesh);
 
+// Corner Pin Spheres & Top Clamp Bar Visuals
 const pinGeo = new THREE.SphereGeometry(0.14, 16, 16);
 const pinMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.2 });
 
-const pinMeshLeft = new THREE.Mesh(pinGeo, pinMat);
-const pinMeshRight = new THREE.Mesh(pinGeo, pinMat);
-scene.add(pinMeshLeft);
-scene.add(pinMeshRight);
+const pinMeshTopLeft = new THREE.Mesh(pinGeo, pinMat);
+const pinMeshTopRight = new THREE.Mesh(pinGeo, pinMat);
+const pinMeshBottomLeft = new THREE.Mesh(pinGeo, pinMat);
+const pinMeshBottomRight = new THREE.Mesh(pinGeo, pinMat);
+scene.add(pinMeshTopLeft);
+scene.add(pinMeshTopRight);
+scene.add(pinMeshBottomLeft);
+scene.add(pinMeshBottomRight);
+
+const topBarGeo = new THREE.CylinderGeometry(0.08, 0.08, clothSim.width + 0.3, 16);
+topBarGeo.rotateZ(Math.PI / 2);
+const topBarMesh = new THREE.Mesh(topBarGeo, pinMat);
+topBarMesh.visible = false;
+scene.add(topBarMesh);
 
 function updatePinVisuals() {
-  const pLeft = clothSim.particles[0];
-  const pRight = clothSim.particles[clothSim.segmentsX];
+  const getIdx = (c, r) => r * (clothSim.segmentsX + 1) + c;
+  const pTopLeft = clothSim.particles[getIdx(0, 0)];
+  const pTopRight = clothSim.particles[getIdx(clothSim.segmentsX, 0)];
+  const pBottomLeft = clothSim.particles[getIdx(0, clothSim.segmentsY)];
+  const pBottomRight = clothSim.particles[getIdx(clothSim.segmentsX, clothSim.segmentsY)];
 
-  if (pLeft) pinMeshLeft.position.set(pLeft.x, pLeft.y, pLeft.z);
-  if (pRight) pinMeshRight.position.set(pRight.x, pRight.y, pRight.z);
+  if (clothSim.pinMode === 'top-edge') {
+    pinMeshTopLeft.visible = false;
+    pinMeshTopRight.visible = false;
+    pinMeshBottomLeft.visible = false;
+    pinMeshBottomRight.visible = false;
+
+    topBarMesh.visible = true;
+    if (pTopLeft && pTopRight) {
+      topBarMesh.position.set((pTopLeft.x + pTopRight.x) / 2, pTopLeft.y, (pTopLeft.z + pTopRight.z) / 2);
+    }
+  } else if (clothSim.pinMode === 'top-4-corners') {
+    topBarMesh.visible = false;
+    pinMeshTopLeft.visible = true;
+    pinMeshTopRight.visible = true;
+    pinMeshBottomLeft.visible = true;
+    pinMeshBottomRight.visible = true;
+
+    if (pTopLeft) pinMeshTopLeft.position.set(pTopLeft.x, pTopLeft.y, pTopLeft.z);
+    if (pTopRight) pinMeshTopRight.position.set(pTopRight.x, pTopRight.y, pTopRight.z);
+    if (pBottomLeft) pinMeshBottomLeft.position.set(pBottomLeft.x, pBottomLeft.y, pBottomLeft.z);
+    if (pBottomRight) pinMeshBottomRight.position.set(pBottomRight.x, pBottomRight.y, pBottomRight.z);
+  } else if (clothSim.pinMode === 'top-2-corners') {
+    topBarMesh.visible = false;
+    pinMeshTopLeft.visible = true;
+    pinMeshTopRight.visible = true;
+    pinMeshBottomLeft.visible = false;
+    pinMeshBottomRight.visible = false;
+
+    if (pTopLeft) pinMeshTopLeft.position.set(pTopLeft.x, pTopLeft.y, pTopLeft.z);
+    if (pTopRight) pinMeshTopRight.position.set(pTopRight.x, pTopRight.y, pTopRight.z);
+  } else {
+    topBarMesh.visible = false;
+    pinMeshTopLeft.visible = false;
+    pinMeshTopRight.visible = false;
+    pinMeshBottomLeft.visible = false;
+    pinMeshBottomRight.visible = false;
+  }
 }
 updatePinVisuals();
 
@@ -180,39 +230,40 @@ clothSim.spherePos.x = sphereMesh.position.x;
 clothSim.spherePos.y = sphereMesh.position.y;
 clothSim.spherePos.z = sphereMesh.position.z;
 
-// 3D Wind Vector Arrow Indicator Helper
-const windArrowDir = new THREE.Vector3(
-  Math.cos((clothSim.windAngle * Math.PI) / 180),
-  0,
-  Math.sin((clothSim.windAngle * Math.PI) / 180)
-);
-const windArrowOrigin = new THREE.Vector3(-5.5, 2.5, 0);
-const windArrowHelper = new THREE.ArrowHelper(
-  windArrowDir,
-  windArrowOrigin,
-  2.5,
-  0xef4444,
-  0.7,
-  0.4
-);
-scene.add(windArrowHelper);
+// Thick 3D Drag Wind Arrow Mesh (Shaft + Cone Tip)
+const arrowMaterial = new THREE.MeshStandardMaterial({
+  color: 0xef4444,
+  metalness: 0.6,
+  roughness: 0.2,
+  emissive: 0x440000
+});
 
-function updateWindArrowVisual() {
-  const rad = (clothSim.windAngle * Math.PI) / 180;
-  const dir = new THREE.Vector3(Math.cos(rad), 0, Math.sin(rad)).normalize();
-  windArrowHelper.setDirection(dir);
-  windArrowHelper.visible = true;
-}
-updateWindArrowVisual();
+const shaftGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 16); // Thick 0.24 diameter shaft
+shaftGeo.translate(0, 0.5, 0);
+
+const coneGeo = new THREE.ConeGeometry(0.35, 0.7, 16); // Bold head tip
+coneGeo.translate(0, 0.35, 0);
+
+const shaftMesh = new THREE.Mesh(shaftGeo, arrowMaterial);
+const coneMesh = new THREE.Mesh(coneGeo, arrowMaterial);
+
+const windArrowGroup = new THREE.Group();
+windArrowGroup.add(shaftMesh);
+windArrowGroup.add(coneMesh);
+windArrowGroup.visible = false; // Hidden by default, appears ONLY while dragging right mouse
+scene.add(windArrowGroup);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
+
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const windRayPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const planeIntersection = new THREE.Vector3();
 
 let isDraggingSphere = false;
 let isRightMouseWind = false;
-let lastRightMousePos = { x: 0, y: 0 };
+const dragStart3D = new THREE.Vector3();
+const dragCurrent3D = new THREE.Vector3();
 
 window.addEventListener('pointerdown', (e) => {
   if (e.target !== canvas) return;
@@ -220,7 +271,7 @@ window.addEventListener('pointerdown', (e) => {
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-  if (e.button === 0) {
+  if (e.button === 0) { // Left click: Drag sphere or orbit camera
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObject(sphereMesh);
 
@@ -232,9 +283,15 @@ window.addEventListener('pointerdown', (e) => {
         sphereMesh.position
       );
     }
-  } else if (e.button === 2) {
+  } else if (e.button === 2) { // Right click: Draw thick 3D Wind Arrow
     isRightMouseWind = true;
-    lastRightMousePos = { x: e.clientX, y: e.clientY };
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectPlane(windRayPlane, planeIntersection)) {
+      dragStart3D.copy(planeIntersection);
+    } else {
+      dragStart3D.set(0, 0, 0);
+    }
+    windArrowGroup.visible = true;
   }
 });
 
@@ -252,30 +309,49 @@ window.addEventListener('pointermove', (e) => {
       clothSim.spherePos.z = sphereMesh.position.z;
     }
   } else if (isRightMouseWind) {
-    const dx = e.clientX - lastRightMousePos.x;
-    const dy = e.clientY - lastRightMousePos.y;
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectPlane(windRayPlane, planeIntersection)) {
+      dragCurrent3D.copy(planeIntersection);
 
-    const angleRad = Math.atan2(-dy, dx);
-    let angleDeg = Math.round((angleRad * 180) / Math.PI);
-    if (angleDeg < 0) angleDeg += 360;
+      const dirVec = new THREE.Vector3().subVectors(dragCurrent3D, dragStart3D);
+      const len = dirVec.length();
 
-    clothSim.windAngle = angleDeg;
-    clothSim.windEnabled = true;
+      if (len > 0.1) {
+        dirVec.normalize();
 
-    // Gentle natural mouse wind push
-    const windScale = 0.18;
-    clothSim.mouseWind.x += Math.cos(angleRad) * Math.abs(dx + dy) * windScale;
-    clothSim.mouseWind.z += Math.sin(angleRad) * Math.abs(dx + dy) * windScale;
+        // Position arrow group at drag start
+        windArrowGroup.position.copy(dragStart3D);
 
-    updateWindArrowVisual();
+        // Rotate arrow along vector direction
+        const up = new THREE.Vector3(0, 1, 0);
+        const q = new THREE.Quaternion().setFromUnitVectors(up, dirVec);
+        windArrowGroup.setRotationFromQuaternion(q);
 
-    if (uiController) {
-      uiController.syncWindAngleUI(clothSim.windAngle);
-      const chkWind = document.getElementById('chk-wind-enable');
-      if (chkWind) chkWind.checked = true;
+        // Adjust thick shaft length and cone tip position
+        const shaftLen = Math.max(0.5, len);
+        shaftMesh.scale.set(1, shaftLen, 1);
+        coneMesh.position.set(0, shaftLen, 0);
+
+        // Calculate wind angle and apply force
+        const angleRad = Math.atan2(dirVec.z, dirVec.x);
+        let angleDeg = Math.round((angleRad * 180) / Math.PI);
+        if (angleDeg < 0) angleDeg += 360;
+
+        clothSim.windAngle = angleDeg;
+        clothSim.windEnabled = true;
+
+        const windForceMag = Math.min(len * 2.5, 30.0);
+        clothSim.mouseWind.x = dirVec.x * windForceMag;
+        clothSim.mouseWind.y = dirVec.y * windForceMag;
+        clothSim.mouseWind.z = dirVec.z * windForceMag;
+
+        if (uiController) {
+          uiController.syncWindAngleUI(clothSim.windAngle);
+          const chkWind = document.getElementById('chk-wind-enable');
+          if (chkWind) chkWind.checked = true;
+        }
+      }
     }
-
-    lastRightMousePos = { x: e.clientX, y: e.clientY };
   }
 });
 
@@ -285,13 +361,11 @@ window.addEventListener('pointerup', (e) => {
     controls.enabled = true;
   } else if (e.button === 2) {
     isRightMouseWind = false;
+    windArrowGroup.visible = false; // Hide 3D arrow on release as requested!
   }
 });
 
 const uiController = new UIController(clothSim, {
-  updateWindAngleUI: (angle) => {
-    updateWindArrowVisual();
-  },
   setRenderMode: (mode) => {
     if (mode === 'solid') {
       clothMaterial.wireframe = false;
@@ -333,7 +407,6 @@ function animate() {
   clothGeometry.attributes.normal.needsUpdate = true;
 
   updatePinVisuals();
-  updateWindArrowVisual();
 
   controls.update();
   uiController.updateFps();

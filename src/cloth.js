@@ -110,9 +110,8 @@ export class ClothSimulator {
 
     this.gravity = -9.8;
     this.damping = 0.98;
-    this.solverIterations = 12;
+    this.solverIterations = 16;
 
-    // Default wind is disabled as requested
     this.windEnabled = false;
     this.windStrength = 12.0;
     this.windAngle = 45;
@@ -224,20 +223,29 @@ export class ClothSimulator {
 
     for (let p of this.particles) {
       p.pinned = false;
+      p.pinPosition = { x: p.x, y: p.y, z: p.z };
     }
 
     if (this.pinMode === 'top-2-corners') {
-      this.particles[getIdx(0, 0)].pinned = true;
-      this.particles[getIdx(this.segmentsX, 0)].pinned = true;
+      const p1 = this.particles[getIdx(0, 0)];
+      const p2 = this.particles[getIdx(this.segmentsX, 0)];
+      p1.pinned = true;
+      p2.pinned = true;
     } else if (this.pinMode === 'top-edge') {
       for (let c = 0; c <= this.segmentsX; c++) {
-        this.particles[getIdx(c, 0)].pinned = true;
+        const p = this.particles[getIdx(c, 0)];
+        p.pinned = true;
       }
     } else if (this.pinMode === 'top-4-corners') {
-      this.particles[getIdx(0, 0)].pinned = true;
-      this.particles[getIdx(this.segmentsX, 0)].pinned = true;
-      this.particles[getIdx(0, this.segmentsY)].pinned = true;
-      this.particles[getIdx(this.segmentsX, this.segmentsY)].pinned = true;
+      const p1 = this.particles[getIdx(0, 0)];
+      const p2 = this.particles[getIdx(this.segmentsX, 0)];
+      const p3 = this.particles[getIdx(0, this.segmentsY)];
+      const p4 = this.particles[getIdx(this.segmentsX, this.segmentsY)];
+
+      p1.pinned = true;
+      p2.pinned = true;
+      p3.pinned = true;
+      p4.pinned = true;
     }
   }
 
@@ -266,9 +274,9 @@ export class ClothSimulator {
         const dot = vx * nx + vy * ny + vz * nz;
 
         if (dot < 0) {
-          particle.oldX = particle.x - (vx - dot * nx) * 0.8;
-          particle.oldY = particle.y - (vy - dot * ny) * 0.8;
-          particle.oldZ = particle.z - (vz - dot * nz) * 0.8;
+          particle.oldX = particle.x - (vx - dot * nx) * 0.85;
+          particle.oldY = particle.y - (vy - dot * ny) * 0.85;
+          particle.oldZ = particle.z - (vz - dot * nz) * 0.85;
         }
       }
     }
@@ -326,9 +334,10 @@ export class ClothSimulator {
       p.update(dt, this.damping);
     }
 
-    const colliderMargin = 0.04;
+    const colliderMargin = 0.05;
     const effectiveRadius = this.sphereRadius + colliderMargin;
 
+    // Iterative constraint relaxation & sphere collision
     for (let iter = 0; iter < this.solverIterations; iter++) {
       for (let c of this.constraints) {
         c.resolve();
@@ -345,6 +354,7 @@ export class ClothSimulator {
       }
     }
 
+    // Absolute final post-solver sphere collision pass to guarantee ZERO particle penetration
     if (this.sphereEnabled) {
       for (let p of this.particles) {
         this.applySphereCollision(p, effectiveRadius);
