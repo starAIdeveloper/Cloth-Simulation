@@ -1,18 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { ClothSimulator } from './cloth.js';
-import { ImGuiController } from './imgui.js';
+import { UIController } from './ui.js';
 
-// ============================================================================
-// 1. Scene, Camera, Renderer Setup
-// ============================================================================
-
-const container = document.body;
 const canvas = document.getElementById('webgl-canvas');
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0e0f14);
-scene.fog = new THREE.FogExp2(0x0e0f14, 0.025);
+scene.background = new THREE.Color(0x2d313b);
+scene.fog = new THREE.FogExp2(0x2d313b, 0.015);
 
 const camera = new THREE.PerspectiveCamera(
   45,
@@ -38,15 +33,11 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(0, 0, 0);
 
-// ============================================================================
-// 2. Lighting & Studio Environment
-// ============================================================================
-
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.4);
-dirLight.position.set(8, 12, 10);
+const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+dirLight.position.set(8, 14, 10);
 dirLight.castShadow = true;
 dirLight.shadow.mapSize.width = 2048;
 dirLight.shadow.mapSize.height = 2048;
@@ -60,33 +51,25 @@ dirLight.shadow.camera.bottom = -d;
 dirLight.shadow.bias = -0.0005;
 scene.add(dirLight);
 
-const rimLight = new THREE.DirectionalLight(0x00b4d8, 0.6);
-rimLight.position.set(-8, 5, -8);
-scene.add(rimLight);
+const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.5);
+fillLight.position.set(-8, 6, -8);
+scene.add(fillLight);
 
-// Studio Ground Floor
-const floorGeo = new THREE.PlaneGeometry(50, 50);
+const floorY = -4.0;
+const floorGeo = new THREE.PlaneGeometry(60, 60);
 const floorMat = new THREE.MeshStandardMaterial({
-  color: 0x14161f,
-  roughness: 0.8,
-  metalness: 0.2
+  color: 0xc8d0e0,
+  roughness: 0.6,
+  metalness: 0.1
 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
-floor.position.y = -6;
+floor.position.y = floorY;
 floor.receiveShadow = true;
 scene.add(floor);
 
-// Grid Helper on floor
-const gridHelper = new THREE.GridHelper(30, 30, 0x00b4d8, 0x222536);
-gridHelper.position.y = -5.99;
-scene.add(gridHelper);
-
-// ============================================================================
-// 3. Cloth Physics Engine Initialization & Dynamic Buffer Mesh
-// ============================================================================
-
 const clothSim = new ClothSimulator(8, 8, 28, 28);
+clothSim.floorY = floorY;
 
 const numParticles = clothSim.particles.length;
 const posArray = new Float32Array(numParticles * 3);
@@ -103,7 +86,6 @@ clothGeometry.setAttribute('normal', new THREE.BufferAttribute(normArray, 3));
 clothGeometry.setAttribute('uv', new THREE.BufferAttribute(uvArray, 2));
 clothGeometry.setIndex(new THREE.BufferAttribute(indexArray, 1));
 
-// Procedural Checkered Canvas Texture Generator for realistic fabric details
 function createFabricTexture() {
   const canvas = document.createElement('canvas');
   canvas.width = 512;
@@ -113,9 +95,8 @@ function createFabricTexture() {
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, 512, 512);
 
-  // Subtle grid pattern
-  ctx.strokeStyle = '#e0e0e0';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#e2e8f0';
+  ctx.lineWidth = 3;
   const step = 32;
   for (let x = 0; x <= 512; x += step) {
     ctx.beginPath();
@@ -140,7 +121,7 @@ function createFabricTexture() {
 const clothTexture = createFabricTexture();
 
 const clothMaterial = new THREE.MeshStandardMaterial({
-  color: 0x3a86ff,
+  color: 0x4361ee,
   map: clothTexture,
   roughness: 0.4,
   metalness: 0.1,
@@ -153,9 +134,8 @@ clothMesh.castShadow = true;
 clothMesh.receiveShadow = true;
 scene.add(clothMesh);
 
-// Pinned Corner Visual Indicators (Top Stand Balls)
-const pinGeo = new THREE.SphereGeometry(0.15, 16, 16);
-const pinMat = new THREE.MeshStandardMaterial({ color: 0x00b4d8, metalness: 0.9, roughness: 0.1 });
+const pinGeo = new THREE.SphereGeometry(0.14, 16, 16);
+const pinMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.2 });
 
 const pinMeshLeft = new THREE.Mesh(pinGeo, pinMat);
 const pinMeshRight = new THREE.Mesh(pinGeo, pinMat);
@@ -163,7 +143,6 @@ scene.add(pinMeshLeft);
 scene.add(pinMeshRight);
 
 function updatePinVisuals() {
-  const numCols = clothSim.segmentsX + 1;
   const pLeft = clothSim.particles[0];
   const pRight = clothSim.particles[clothSim.segmentsX];
 
@@ -172,39 +151,30 @@ function updatePinVisuals() {
 }
 updatePinVisuals();
 
-// ============================================================================
-// 4. Sphere Collider Setup & Mouse Dragging
-// ============================================================================
-
 const sphereGeo = new THREE.SphereGeometry(1, 32, 32);
 const sphereMat = new THREE.MeshStandardMaterial({
-  color: 0xff0055,
-  roughness: 0.15,
-  metalness: 0.8,
-  emissive: 0x330011
+  color: 0xe11d48,
+  roughness: 0.2,
+  metalness: 0.7
 });
 const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
 sphereMesh.castShadow = true;
 sphereMesh.receiveShadow = true;
 scene.add(sphereMesh);
 
-// Point light inside sphere for vibrant glow effect
-const sphereLight = new THREE.PointLight(0xff0055, 1.5, 8);
-sphereMesh.add(sphereLight);
-
-let sphereAutoAnimate = true;
-
 function updateSphereScale(radius) {
   sphereMesh.scale.set(radius, radius, radius);
 }
 updateSphereScale(clothSim.sphereRadius);
 
-// Raycasting for Sphere Mouse Drag Interaction
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const planeIntersection = new THREE.Vector3();
 let isDraggingSphere = false;
+
+let isDraggingCanvasWind = false;
+let lastMousePos = { x: 0, y: 0 };
 
 window.addEventListener('pointerdown', (e) => {
   if (e.target !== canvas) return;
@@ -217,30 +187,42 @@ window.addEventListener('pointerdown', (e) => {
 
   if (intersects.length > 0) {
     isDraggingSphere = true;
-    controls.enabled = false; // Disable orbit camera while dragging sphere
+    controls.enabled = false;
     dragPlane.setFromNormalAndCoplanarPoint(
       camera.getWorldDirection(new THREE.Vector3()).negate(),
       sphereMesh.position
     );
+  } else if (e.button === 0) {
+    isDraggingCanvasWind = true;
+    lastMousePos = { x: e.clientX, y: e.clientY };
   }
 });
 
 window.addEventListener('pointermove', (e) => {
-  if (!isDraggingSphere) return;
-
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-  raycaster.setFromCamera(mouse, camera);
-  if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
-    sphereMesh.position.copy(planeIntersection);
-    clothSim.spherePos.x = sphereMesh.position.x;
-    clothSim.spherePos.y = sphereMesh.position.y;
-    clothSim.spherePos.z = sphereMesh.position.z;
+  if (isDraggingSphere) {
+    raycaster.setFromCamera(mouse, camera);
+    if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
+      sphereMesh.position.copy(planeIntersection);
+      clothSim.spherePos.x = sphereMesh.position.x;
+      clothSim.spherePos.y = sphereMesh.position.y;
+      clothSim.spherePos.z = sphereMesh.position.z;
 
-    if (imguiController) {
-      imguiController.syncSpherePosUI(clothSim.spherePos);
+      if (uiController) {
+        uiController.syncSpherePosUI(clothSim.spherePos);
+      }
     }
+  } else if (isDraggingCanvasWind) {
+    const dx = e.clientX - lastMousePos.x;
+    const dy = e.clientY - lastMousePos.y;
+
+    const windScale = 0.8;
+    clothSim.mouseWind.x += dx * windScale;
+    clothSim.mouseWind.y += -dy * windScale;
+
+    lastMousePos = { x: e.clientX, y: e.clientY };
   }
 });
 
@@ -249,18 +231,12 @@ window.addEventListener('pointerup', () => {
     isDraggingSphere = false;
     controls.enabled = true;
   }
+  isDraggingCanvasWind = false;
 });
 
-// ============================================================================
-// 5. ImGui Controller Integration
-// ============================================================================
-
-const imguiController = new ImGuiController(clothSim, {
+const uiController = new UIController(clothSim, {
   setSphereVisible: (visible) => {
     sphereMesh.visible = visible;
-  },
-  setSphereAutoAnimate: (animate) => {
-    sphereAutoAnimate = animate;
   },
   updateSphereScale: (radius) => {
     updateSphereScale(radius);
@@ -275,9 +251,6 @@ const imguiController = new ImGuiController(clothSim, {
     } else if (mode === 'wireframe') {
       clothMaterial.wireframe = true;
       clothMesh.visible = true;
-    } else if (mode === 'points') {
-      clothMaterial.wireframe = true;
-      clothMesh.visible = true;
     }
   },
   setClothColor: (hexColor) => {
@@ -289,50 +262,26 @@ const imguiController = new ImGuiController(clothSim, {
   }
 });
 
-// Sync initial position
 clothSim.spherePos.x = sphereMesh.position.x;
 clothSim.spherePos.y = sphereMesh.position.y;
 clothSim.spherePos.z = sphereMesh.position.z;
 
-// ============================================================================
-// 6. Animation & Simulation Loop
-// ============================================================================
-
 const clock = new THREE.Clock();
-const fixedDeltaTime = 1 / 60; // 60 FPS fixed physics timestep
+const fixedDeltaTime = 1 / 60;
 
 function animate() {
   requestAnimationFrame(animate);
 
   const elapsedTime = clock.getElapsedTime();
 
-  // 1. Auto Orbit Sphere Motion (If Enabled & Not Being Dragged)
-  if (sphereAutoAnimate && !isDraggingSphere && clothSim.sphereEnabled) {
-    const radius = 2.5;
-    const speed = 1.2;
-    const x = Math.sin(elapsedTime * speed) * radius;
-    const z = Math.cos(elapsedTime * speed) * radius;
-    const y = Math.sin(elapsedTime * 2.0) * 0.8;
-
-    sphereMesh.position.set(x, y, z);
-    clothSim.spherePos.x = x;
-    clothSim.spherePos.y = y;
-    clothSim.spherePos.z = z;
-
-    imguiController.syncSpherePosUI(clothSim.spherePos);
-  }
-
-  // 2. Step Cloth Physics Simulator (If not paused)
-  if (!imguiController.isPaused) {
-    // Perform sub-stepping for smooth physics stability
-    const subSteps = 2;
+  if (!uiController.isPaused) {
+    const subSteps = 3;
     const subDt = fixedDeltaTime / subSteps;
     for (let i = 0; i < subSteps; i++) {
       clothSim.step(subDt, elapsedTime);
     }
   }
 
-  // 3. Update WebGL Buffers
   const positions = clothGeometry.attributes.position.array;
   const normals = clothGeometry.attributes.normal.array;
 
@@ -344,20 +293,16 @@ function animate() {
 
   updatePinVisuals();
 
-  // 4. Update Camera Controls & ImGui FPS Counter
   controls.update();
-  imguiController.updateFps();
+  uiController.updateFps();
 
-  // 5. Render Scene
   renderer.render(scene, camera);
 }
 
-// Window Resize Handler
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
-// Start loop
 animate();

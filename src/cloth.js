@@ -1,15 +1,9 @@
-/**
- * Custom Verlet Integration Cloth Physics Engine (Written 100% from scratch)
- * Implements particle dynamics, structural/shear/bending distance constraints,
- * wind forces, sphere collision resolution, and top-corner pinning.
- */
-
 export class ClothParticle {
   constructor(x, y, z, mass = 0.1) {
     this.x = x;
     this.y = y;
     this.z = z;
-    
+
     this.oldX = x;
     this.oldY = y;
     this.oldZ = z;
@@ -38,7 +32,6 @@ export class ClothParticle {
       return;
     }
 
-    // Verlet integration formula: pos_new = pos + (pos - pos_old) * damping + acc * dt^2
     const vx = (this.x - this.oldX) * damping;
     const vy = (this.y - this.oldY) * damping;
     const vz = (this.z - this.oldZ) * damping;
@@ -52,7 +45,6 @@ export class ClothParticle {
     this.y += vy + this.accY * dt2;
     this.z += vz + this.accZ * dt2;
 
-    // Reset forces for next step
     this.accX = 0;
     this.accY = 0;
     this.accZ = 0;
@@ -105,7 +97,7 @@ export class ClothConstraint {
 }
 
 export class ClothSimulator {
-  constructor(width = 8, height = 8, segmentsX = 24, segmentsY = 24) {
+  constructor(width = 8, height = 8, segmentsX = 26, segmentsY = 26) {
     this.width = width;
     this.height = height;
     this.segmentsX = segmentsX;
@@ -116,21 +108,23 @@ export class ClothSimulator {
     this.indices = [];
     this.uvs = [];
 
-    // Physics parameters
     this.gravity = -9.8;
     this.damping = 0.98;
-    this.solverIterations = 8;
-    
-    // Wind parameters
+    this.solverIterations = 12;
+
     this.windEnabled = true;
     this.windStrength = 12.0;
-    this.windAngle = 45; // degrees
+    this.windAngle = 45;
     this.windTurbulence = true;
 
-    // Sphere collider parameters
+    this.mouseWind = { x: 0, y: 0, z: 0 };
+
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
     this.spherePos = { x: 0, y: 0, z: 0 };
+
+    this.floorEnabled = true;
+    this.floorY = -4.0;
 
     this.pinMode = 'top-2-corners';
 
@@ -151,7 +145,6 @@ export class ClothSimulator {
     const startX = -this.width / 2;
     const startY = this.height / 2;
 
-    // 1. Create Particles Grid
     for (let r = 0; r < numRows; r++) {
       for (let c = 0; c < numCols; c++) {
         const x = startX + c * dx;
@@ -161,25 +154,20 @@ export class ClothSimulator {
         const particle = new ClothParticle(x, y, z);
         this.particles.push(particle);
 
-        // UV map calculation
         const u = c / this.segmentsX;
         const v = 1.0 - r / this.segmentsY;
         this.uvs.push(u, v);
       }
     }
 
-    // Index helper
     const getIdx = (c, r) => r * numCols + c;
 
-    // 2. Apply Pinning
     this.applyPinning();
 
-    // 3. Create Constraints
     for (let r = 0; r < numRows; r++) {
       for (let c = 0; c < numCols; c++) {
         const pCurrent = this.particles[getIdx(c, r)];
 
-        // Structural (Right & Down)
         if (c < this.segmentsX) {
           const pRight = this.particles[getIdx(c + 1, r)];
           this.constraints.push(new ClothConstraint(pCurrent, pRight));
@@ -189,7 +177,6 @@ export class ClothSimulator {
           this.constraints.push(new ClothConstraint(pCurrent, pDown));
         }
 
-        // Shear (Diagonal Right-Down & Left-Down)
         if (c < this.segmentsX && r < this.segmentsY) {
           const pDiagonal1 = this.particles[getIdx(c + 1, r + 1)];
           this.constraints.push(new ClothConstraint(pCurrent, pDiagonal1));
@@ -200,7 +187,6 @@ export class ClothSimulator {
           this.constraints.push(new ClothConstraint(pLeft, pDiagonal2));
         }
 
-        // Bending (Skip 2 Horizontal & Vertical)
         if (c < this.segmentsX - 1) {
           const p2Right = this.particles[getIdx(c + 2, r)];
           this.constraints.push(new ClothConstraint(pCurrent, p2Right));
@@ -212,7 +198,6 @@ export class ClothSimulator {
       }
     }
 
-    // 4. Create Triangle Mesh Indices (For 3D Rendering)
     for (let r = 0; r < this.segmentsY; r++) {
       for (let c = 0; c < this.segmentsX; c++) {
         const i0 = getIdx(c, r);
@@ -220,9 +205,7 @@ export class ClothSimulator {
         const i2 = getIdx(c, r + 1);
         const i3 = getIdx(c + 1, r + 1);
 
-        // First Triangle (Top-Left)
         this.indices.push(i0, i2, i1);
-        // Second Triangle (Bottom-Right)
         this.indices.push(i1, i2, i3);
       }
     }
@@ -238,15 +221,12 @@ export class ClothSimulator {
     const numRows = this.segmentsY + 1;
     const getIdx = (c, r) => r * numCols + c;
 
-    // Reset all pins
     for (let p of this.particles) {
       p.pinned = false;
     }
 
     if (this.pinMode === 'top-2-corners') {
-      // Top Left Corner (0, 0)
       this.particles[getIdx(0, 0)].pinned = true;
-      // Top Right Corner (segmentsX, 0)
       this.particles[getIdx(this.segmentsX, 0)].pinned = true;
     } else if (this.pinMode === 'top-edge') {
       for (let c = 0; c <= this.segmentsX; c++) {
@@ -260,8 +240,52 @@ export class ClothSimulator {
     }
   }
 
+  applySphereCollision(particle, effectiveRadius) {
+    if (particle.pinned) return;
+
+    const dx = particle.x - this.spherePos.x;
+    const dy = particle.y - this.spherePos.y;
+    const dz = particle.z - this.spherePos.z;
+
+    const distSq = dx * dx + dy * dy + dz * dz;
+    if (distSq < effectiveRadius * effectiveRadius) {
+      const dist = Math.sqrt(distSq);
+      if (dist > 0.00001) {
+        const nx = dx / dist;
+        const ny = dy / dist;
+        const nz = dz / dist;
+
+        particle.x = this.spherePos.x + nx * effectiveRadius;
+        particle.y = this.spherePos.y + ny * effectiveRadius;
+        particle.z = this.spherePos.z + nz * effectiveRadius;
+
+        const vx = particle.x - particle.oldX;
+        const vy = particle.y - particle.oldY;
+        const vz = particle.z - particle.oldZ;
+        const dot = vx * nx + vy * ny + vz * nz;
+
+        if (dot < 0) {
+          particle.oldX = particle.x - (vx - dot * nx) * 0.8;
+          particle.oldY = particle.y - (vy - dot * ny) * 0.8;
+          particle.oldZ = particle.z - (vz - dot * nz) * 0.8;
+        }
+      }
+    }
+  }
+
+  applyFloorCollision(particle) {
+    if (particle.pinned || !this.floorEnabled) return;
+
+    if (particle.y < this.floorY) {
+      particle.y = this.floorY;
+      particle.oldY = particle.y;
+
+      particle.oldX = particle.x - (particle.x - particle.oldX) * 0.7;
+      particle.oldZ = particle.z - (particle.z - particle.oldZ) * 0.7;
+    }
+  }
+
   step(dt, timeSec = 0) {
-    // 1. Accumulate External Forces (Gravity & Wind)
     const rad = (this.windAngle * Math.PI) / 180;
     const windDirX = Math.cos(rad);
     const windDirZ = Math.sin(rad);
@@ -269,10 +293,8 @@ export class ClothSimulator {
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
 
-      // Gravity force
       p.addForce(0, this.gravity * p.mass, 0);
 
-      // Wind force with sinusoidal wave turbulence
       if (this.windEnabled) {
         let turbulence = 1.0;
         if (this.windTurbulence) {
@@ -286,63 +308,46 @@ export class ClothSimulator {
           windDirZ * windForceMag
         );
       }
+
+      if (this.mouseWind.x !== 0 || this.mouseWind.y !== 0 || this.mouseWind.z !== 0) {
+        p.addForce(this.mouseWind.x, this.mouseWind.y, this.mouseWind.z);
+      }
     }
 
-    // 2. Integration Step
+    this.mouseWind.x *= 0.85;
+    this.mouseWind.y *= 0.85;
+    this.mouseWind.z *= 0.85;
+
     for (let p of this.particles) {
       p.update(dt, this.damping);
     }
 
-    // 3. Resolve Distance Constraints & Collisions Iteratively
-    const colliderMargin = 0.05;
+    const colliderMargin = 0.04;
     const effectiveRadius = this.sphereRadius + colliderMargin;
 
     for (let iter = 0; iter < this.solverIterations; iter++) {
-      // Resolve springs
       for (let c of this.constraints) {
         c.resolve();
       }
 
-      // Resolve Sphere Collision
       if (this.sphereEnabled) {
-        const sx = this.spherePos.x;
-        const sy = this.spherePos.y;
-        const sz = this.spherePos.z;
-
         for (let p of this.particles) {
-          if (p.pinned) continue;
-
-          const dx = p.x - sx;
-          const dy = p.y - sy;
-          const dz = p.z - sz;
-
-          const distSq = dx * dx + dy * dy + dz * dz;
-          if (distSq < effectiveRadius * effectiveRadius) {
-            const dist = Math.sqrt(distSq);
-            if (dist > 0.0001) {
-              const nx = dx / dist;
-              const ny = dy / dist;
-              const nz = dz / dist;
-
-              // Push particle to surface of sphere
-              p.x = sx + nx * effectiveRadius;
-              p.y = sy + ny * effectiveRadius;
-              p.z = sz + nz * effectiveRadius;
-
-              // Friction damping on collision surface
-              p.oldX = p.x - (p.x - p.oldX) * 0.85;
-              p.oldY = p.y - (p.y - p.oldY) * 0.85;
-              p.oldZ = p.z - (p.z - p.oldZ) * 0.85;
-            }
-          }
+          this.applySphereCollision(p, effectiveRadius);
         }
+      }
+
+      for (let p of this.particles) {
+        this.applyFloorCollision(p);
+      }
+    }
+
+    if (this.sphereEnabled) {
+      for (let p of this.particles) {
+        this.applySphereCollision(p, effectiveRadius);
       }
     }
   }
 
-  /**
-   * Copies current particle positions into target Float32Array position buffer.
-   */
   updatePositionBuffer(positions) {
     for (let i = 0; i < this.particles.length; i++) {
       const p = this.particles[i];
@@ -352,15 +357,9 @@ export class ClothSimulator {
     }
   }
 
-  /**
-   * Recalculates smooth vertex normals from triangle mesh topology
-   * and copies into target Float32Array normal buffer.
-   */
   updateNormalBuffer(positions, normals) {
-    // Clear normals
     normals.fill(0);
 
-    // Accumulate face normals
     for (let i = 0; i < this.indices.length; i += 3) {
       const idxA = this.indices[i];
       const idxB = this.indices[i + 1];
@@ -378,7 +377,6 @@ export class ClothSimulator {
       const cy = positions[idxC * 3 + 1];
       const cz = positions[idxC * 3 + 2];
 
-      // Edge vectors: v1 = B - A, v2 = C - A
       const v1x = bx - ax;
       const v1y = by - ay;
       const v1z = bz - az;
@@ -387,28 +385,23 @@ export class ClothSimulator {
       const v2y = cy - ay;
       const v2z = cz - az;
 
-      // Cross product (Face normal)
       const nx = v1y * v2z - v1z * v2y;
       const ny = v1z * v2x - v1x * v2z;
       const nz = v1x * v2y - v1y * v2x;
 
-      // Add to vertex A
       normals[idxA * 3] += nx;
       normals[idxA * 3 + 1] += ny;
       normals[idxA * 3 + 2] += nz;
 
-      // Add to vertex B
       normals[idxB * 3] += nx;
       normals[idxB * 3 + 1] += ny;
       normals[idxB * 3 + 2] += nz;
 
-      // Add to vertex C
       normals[idxC * 3] += nx;
       normals[idxC * 3 + 1] += ny;
       normals[idxC * 3 + 2] += nz;
     }
 
-    // Normalize per vertex
     for (let i = 0; i < this.particles.length; i++) {
       const nx = normals[i * 3];
       const ny = normals[i * 3 + 1];

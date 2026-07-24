@@ -1,16 +1,9 @@
-/**
- * ImGui UI Controller & FPS Monitor
- * Handles DOM input bindings, parameter synchronization with Cloth Simulator,
- * real-time FPS calculation, and window collapsing/expanding to hamburger menu (☰).
- */
-
-export class ImGuiController {
+export class UIController {
   constructor(clothSim, sceneCallbacks = {}) {
     this.clothSim = clothSim;
     this.sceneCallbacks = sceneCallbacks;
 
-    // FPS calculation variables
-    this.fpsElement = document.getElementById('imgui-fps');
+    this.fpsElement = document.getElementById('ui-fps');
     this.frameCount = 0;
     this.lastFpsTime = performance.now();
     this.currentFps = 60.0;
@@ -26,22 +19,10 @@ export class ImGuiController {
     const now = performance.now();
     const delta = now - this.lastFpsTime;
 
-    if (delta >= 500) { // Update FPS every 500ms
+    if (delta >= 500) {
       this.currentFps = (this.frameCount * 1000) / delta;
       if (this.fpsElement) {
         this.fpsElement.textContent = `${this.currentFps.toFixed(1)} FPS`;
-        
-        // Color badge based on performance
-        if (this.currentFps >= 50) {
-          this.fpsElement.style.borderColor = '#00b4d8';
-          this.fpsElement.style.color = '#00b4d8';
-        } else if (this.currentFps >= 30) {
-          this.fpsElement.style.borderColor = '#ffd166';
-          this.fpsElement.style.color = '#ffd166';
-        } else {
-          this.fpsElement.style.borderColor = '#ff4d4d';
-          this.fpsElement.style.color = '#ff4d4d';
-        }
       }
       this.frameCount = 0;
       this.lastFpsTime = now;
@@ -49,10 +30,9 @@ export class ImGuiController {
   }
 
   initUI() {
-    // 1. Setup Collapse / Hamburger Toggle
-    const panel = document.getElementById('imgui-panel');
-    const closeBtn = document.getElementById('imgui-close-btn');
-    const hamburgerBtn = document.getElementById('imgui-toggle-btn');
+    const panel = document.getElementById('ui-panel');
+    const closeBtn = document.getElementById('ui-close-btn');
+    const hamburgerBtn = document.getElementById('ui-toggle-btn');
 
     closeBtn.addEventListener('click', () => {
       panel.classList.add('collapsed');
@@ -64,31 +44,24 @@ export class ImGuiController {
       hamburgerBtn.classList.add('hidden');
     });
 
-    // 2. Simulation Buttons
     const pauseBtn = document.getElementById('btn-pause');
     const resetBtn = document.getElementById('btn-reset');
 
     pauseBtn.addEventListener('click', () => {
       this.isPaused = !this.isPaused;
       pauseBtn.textContent = this.isPaused ? 'Resume' : 'Pause';
-      if (this.isPaused) {
-        pauseBtn.classList.add('imgui-btn-accent');
-      } else {
-        pauseBtn.classList.remove('imgui-btn-accent');
-      }
+      pauseBtn.classList.toggle('ui-btn-accent', this.isPaused);
     });
 
     resetBtn.addEventListener('click', () => {
       this.clothSim.initGrid();
     });
 
-    // 3. Pinning Mode
     const pinSelect = document.getElementById('sel-pin-mode');
     pinSelect.addEventListener('change', (e) => {
       this.clothSim.setPinMode(e.target.value);
     });
 
-    // 4. Physics Sliders
     this.bindSlider('sld-gravity', 'val-gravity', (val) => {
       this.clothSim.gravity = parseFloat(val);
     }, (v) => parseFloat(v).toFixed(1));
@@ -101,7 +74,6 @@ export class ImGuiController {
       this.clothSim.solverIterations = parseInt(val, 10);
     }, (v) => v);
 
-    // 5. Wind Sliders & Toggles
     const chkWind = document.getElementById('chk-wind-enable');
     chkWind.addEventListener('change', (e) => {
       this.clothSim.windEnabled = e.target.checked;
@@ -120,19 +92,11 @@ export class ImGuiController {
       this.clothSim.windTurbulence = e.target.checked;
     });
 
-    // 6. Sphere Collider Sliders & Toggles
     const chkSphere = document.getElementById('chk-sphere-enable');
     chkSphere.addEventListener('change', (e) => {
       this.clothSim.sphereEnabled = e.target.checked;
       if (this.sceneCallbacks.setSphereVisible) {
         this.sceneCallbacks.setSphereVisible(e.target.checked);
-      }
-    });
-
-    const chkSphereAnimate = document.getElementById('chk-sphere-animate');
-    chkSphereAnimate.addEventListener('change', (e) => {
-      if (this.sceneCallbacks.setSphereAutoAnimate) {
-        this.sceneCallbacks.setSphereAutoAnimate(e.target.checked);
       }
     });
 
@@ -160,7 +124,6 @@ export class ImGuiController {
       }
     }, (v) => parseFloat(v).toFixed(1));
 
-    // 7. Render Mode & Material Color
     const selRender = document.getElementById('sel-render-mode');
     selRender.addEventListener('change', (e) => {
       if (this.sceneCallbacks.setRenderMode) {
@@ -213,8 +176,7 @@ export class ImGuiController {
   }
 
   initEvents() {
-    // Prevent mouse events inside ImGui panel from triggering Three.js OrbitControls
-    const panel = document.getElementById('imgui-panel');
+    const panel = document.getElementById('ui-panel');
     ['mousedown', 'mouseup', 'mousemove', 'wheel', 'touchstart', 'touchend'].forEach((evt) => {
       panel.addEventListener(evt, (e) => {
         e.stopPropagation();

@@ -1,4 +1,3 @@
-/* Reset & Base Layout */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -10,9 +9,9 @@ html, body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #0b0c10;
-  font-family: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
-  color: #c5c6c7;
+  background-color: #262930;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #e2e8f0;
 }
 
 #app {
@@ -28,328 +27,289 @@ html, body {
 }
 
 /* ==========================================================================
-   Dear ImGui Theme Styling
+   Clean & Natural GUI Styling
    ========================================================================== */
 
-/* Hamburger Toggle Button (Shown when ImGui is collapsed) */
-.imgui-hamburger-btn {
+.ui-hamburger-btn {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 1000;
-  width: 44px;
-  height: 44px;
-  background: #181920;
-  border: 1px solid #00b4d8;
+  width: 40px;
+  height: 40px;
+  background: #2d323e;
+  border: 1px solid #454c5e;
   border-radius: 6px;
-  color: #00b4d8;
+  color: #e2e8f0;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 180, 216, 0.3);
-  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: all 0.15s ease;
 }
 
-.imgui-hamburger-btn:hover {
-  background: #00b4d8;
-  color: #181920;
-  transform: scale(1.05);
+.ui-hamburger-btn:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
 }
 
-.imgui-hamburger-btn.hidden {
+.ui-hamburger-btn.hidden {
   display: none !important;
-  opacity: 0;
-  pointer-events: none;
 }
 
-/* Main ImGui Window */
-.imgui-window {
+.ui-window {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 999;
-  width: 320px;
+  width: 300px;
   max-height: calc(100vh - 32px);
-  background: rgba(20, 21, 28, 0.94);
-  backdrop-filter: blur(8px);
-  border: 1px solid #2e3146;
-  border-radius: 4px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: rgba(30, 34, 42, 0.95);
+  backdrop-filter: blur(6px);
+  border: 1px solid #3d4454;
+  border-radius: 6px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
   display: flex;
   flex-direction: column;
   font-size: 12px;
-  line-height: 1.4;
   color: #d1d5db;
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.imgui-window.collapsed {
-  opacity: 0;
-  transform: scale(0.95) translateY(-10px);
-  pointer-events: none;
+.ui-window.collapsed {
   display: none !important;
 }
 
-/* ImGui Header (Titlebar) */
-.imgui-header {
-  background: #252836;
-  border-bottom: 1px solid #363a50;
-  padding: 8px 10px;
+.ui-header {
+  background: #252932;
+  border-bottom: 1px solid #373d4d;
+  padding: 8px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-top-left-radius: 3px;
-  border-top-right-radius: 3px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+  font-weight: 600;
 }
 
-.imgui-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #ffffff;
+.ui-title {
+  color: #f1f5f9;
   font-size: 12px;
 }
 
-.imgui-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #00b4d8;
-  border-radius: 50%;
-  box-shadow: 0 0 6px #00b4d8;
-}
-
-.imgui-header-right {
+.ui-header-right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
-.imgui-fps-badge {
-  background: #11131a;
-  border: 1px solid #00b4d8;
-  color: #00b4d8;
+.ui-fps-badge {
+  background: #181a20;
+  border: 1px solid #3b82f6;
+  color: #60a5fa;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   font-size: 11px;
-  font-weight: 700;
-  font-family: inherit;
+  font-weight: 600;
+  font-family: monospace;
 }
 
-.imgui-close-btn {
+.ui-close-btn {
   background: transparent;
   border: none;
-  color: #9ca3af;
+  color: #94a3b8;
   font-size: 14px;
-  font-weight: bold;
   cursor: pointer;
-  padding: 0 4px;
+  padding: 0 2px;
   line-height: 1;
   transition: color 0.15s ease;
 }
 
-.imgui-close-btn:hover {
-  color: #ff4d4d;
+.ui-close-btn:hover {
+  color: #ef4444;
 }
 
-/* ImGui Content Body */
-.imgui-content {
+.ui-content {
   padding: 10px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-/* Custom Scrollbar for ImGui Window */
-.imgui-content::-webkit-scrollbar {
-  width: 6px;
+.ui-content::-webkit-scrollbar {
+  width: 5px;
 }
-.imgui-content::-webkit-scrollbar-track {
-  background: #14151c;
+.ui-content::-webkit-scrollbar-track {
+  background: #1e222a;
 }
-.imgui-content::-webkit-scrollbar-thumb {
-  background: #363a50;
+.ui-content::-webkit-scrollbar-thumb {
+  background: #373d4d;
   border-radius: 3px;
-}
-.imgui-content::-webkit-scrollbar-thumb:hover {
-  background: #00b4d8;
 }
 
-/* ImGui Groups / Collapsible Sections */
-.imgui-group {
-  background: #181a24;
-  border: 1px solid #282b3d;
-  border-radius: 3px;
+.ui-group {
+  background: #252932;
+  border: 1px solid #353b49;
+  border-radius: 4px;
   padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
-.imgui-group-title {
+.ui-group-title {
   font-size: 11px;
-  font-weight: 700;
-  color: #00b4d8;
+  font-weight: 600;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  border-bottom: 1px dashed #2e3248;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #313644;
   padding-bottom: 4px;
   margin-bottom: 2px;
 }
 
-/* Rows & Controls */
-.imgui-row {
+.ui-row {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
 }
 
-.imgui-checkbox-row {
+.ui-checkbox-row {
   flex-direction: row;
   align-items: center;
   gap: 8px;
   cursor: pointer;
 }
 
-.imgui-label {
+.ui-label {
   font-size: 11px;
-  color: #9ca3af;
+  color: #cbd5e1;
   display: flex;
   justify-content: space-between;
 }
 
-.imgui-label span {
-  color: #00b4d8;
-  font-weight: 700;
+.ui-label span {
+  color: #60a5fa;
+  font-weight: 600;
 }
 
-/* Sliders */
-.imgui-slider {
+.ui-slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  background: #111319;
+  height: 5px;
+  background: #181a20;
   border-radius: 3px;
   outline: none;
-  border: 1px solid #2d3144;
+  border: 1px solid #333846;
 }
 
-.imgui-slider::-webkit-slider-thumb {
+.ui-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 2px;
-  background: #00b4d8;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  background: #3b82f6;
   cursor: pointer;
-  box-shadow: 0 0 4px rgba(0, 180, 216, 0.6);
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: background 0.15s ease;
 }
 
-.imgui-slider::-webkit-slider-thumb:hover {
-  background: #48cae4;
-  transform: scale(1.15);
+.ui-slider::-webkit-slider-thumb:hover {
+  background: #60a5fa;
 }
 
-/* Checkboxes */
-.imgui-checkbox {
+.ui-checkbox {
   appearance: none;
   width: 14px;
   height: 14px;
-  background: #111319;
-  border: 1px solid #3b3f58;
-  border-radius: 2px;
+  background: #181a20;
+  border: 1px solid #475569;
+  border-radius: 3px;
   cursor: pointer;
   position: relative;
 }
 
-.imgui-checkbox:checked {
-  background: #00b4d8;
-  border-color: #00b4d8;
+.ui-checkbox:checked {
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 
-.imgui-checkbox:checked::after {
+.ui-checkbox:checked::after {
   content: '✓';
   position: absolute;
   top: -2px;
-  left: 1px;
-  font-size: 11px;
-  color: #111319;
+  left: 2px;
+  font-size: 10px;
+  color: #ffffff;
   font-weight: bold;
 }
 
-/* Select & Inputs */
-.imgui-select, .imgui-color-picker {
-  background: #111319;
-  border: 1px solid #2d3144;
-  color: #e5e7eb;
+.ui-select, .ui-color-picker {
+  background: #181a20;
+  border: 1px solid #373d4d;
+  color: #f1f5f9;
   padding: 4px 8px;
-  border-radius: 3px;
+  border-radius: 4px;
   font-family: inherit;
   font-size: 11px;
   outline: none;
   cursor: pointer;
 }
 
-.imgui-select:focus, .imgui-color-picker:focus {
-  border-color: #00b4d8;
+.ui-select:focus, .ui-color-picker:focus {
+  border-color: #3b82f6;
 }
 
-.imgui-color-picker {
+.ui-color-picker {
   width: 100%;
-  height: 28px;
+  height: 26px;
   padding: 2px;
 }
 
-/* Buttons */
-.imgui-btn-row {
+.ui-btn-row {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
-.imgui-btn {
+.ui-btn {
   flex: 1;
-  background: #252836;
-  border: 1px solid #363a50;
-  color: #e5e7eb;
-  padding: 6px 10px;
-  border-radius: 3px;
+  background: #333846;
+  border: 1px solid #454c5e;
+  color: #f1f5f9;
+  padding: 5px 8px;
+  border-radius: 4px;
   font-family: inherit;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
-.imgui-btn:hover {
-  background: #363a50;
-  border-color: #00b4d8;
+.ui-btn:hover {
+  background: #454c5e;
+  border-color: #64748b;
+}
+
+.ui-btn-accent {
+  background: #2563eb;
+  border-color: #2563eb;
   color: #ffffff;
 }
 
-.imgui-btn-accent {
-  background: #00b4d8;
-  border-color: #00b4d8;
-  color: #111319;
+.ui-btn-accent:hover {
+  background: #3b82f6;
+  border-color: #3b82f6;
 }
 
-.imgui-btn-accent:hover {
-  background: #48cae4;
-  border-color: #48cae4;
-  color: #111319;
-}
-
-/* Tooltip tip footer */
-.imgui-footer-tip {
+.ui-footer-tip {
   font-size: 10px;
-  color: #6b7280;
-  background: #111218;
-  border: 1px solid #222533;
+  color: #94a3b8;
+  background: #1e222a;
+  border: 1px solid #2d3340;
   padding: 6px;
-  border-radius: 3px;
+  border-radius: 4px;
   line-height: 1.3;
 }
