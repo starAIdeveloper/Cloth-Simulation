@@ -276,12 +276,17 @@ export class ClothSimulator {
   applyFloorCollision(particle) {
     if (particle.pinned || !this.floorEnabled) return;
 
-    if (particle.y < this.floorY) {
-      particle.y = this.floorY;
-      particle.oldY = particle.y;
+    // Small offset margin (0.03m) above floor plane to eliminate Z-fighting flickering completely
+    const floorMargin = 0.03;
+    const targetY = this.floorY + floorMargin;
 
-      particle.oldX = particle.x - (particle.x - particle.oldX) * 0.7;
-      particle.oldZ = particle.z - (particle.z - particle.oldZ) * 0.7;
+    if (particle.y < targetY) {
+      particle.y = targetY;
+      particle.oldY = targetY;
+
+      // Surface friction damping
+      particle.oldX = particle.x - (particle.x - particle.oldX) * 0.65;
+      particle.oldZ = particle.z - (particle.z - particle.oldZ) * 0.65;
     }
   }
 

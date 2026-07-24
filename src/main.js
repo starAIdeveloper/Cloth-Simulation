@@ -5,6 +5,8 @@ import { UIController } from './ui.js';
 
 const canvas = document.getElementById('webgl-canvas');
 
+canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x2d313b);
 scene.fog = new THREE.FogExp2(0x2d313b, 0.015);
@@ -33,6 +35,13 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.05;
 controls.target.set(0, 0, 0);
 
+controls.mouseButtons = {
+  LEFT: THREE.MOUSE.ROTATE,
+  MIDDLE: THREE.MOUSE.DOLLY,
+  RIGHT: THREE.MOUSE.NONE
+};
+controls.enablePan = false;
+
 const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
 scene.add(ambientLight);
 
@@ -60,7 +69,10 @@ const floorGeo = new THREE.PlaneGeometry(60, 60);
 const floorMat = new THREE.MeshStandardMaterial({
   color: 0xc8d0e0,
   roughness: 0.6,
-  metalness: 0.1
+  metalness: 0.1,
+  polygonOffset: true,
+  polygonOffsetFactor: 1,
+  polygonOffsetUnits: 1
 });
 const floor = new THREE.Mesh(floorGeo, floorMat);
 floor.rotation.x = -Math.PI / 2;
@@ -171,10 +183,10 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
 const planeIntersection = new THREE.Vector3();
-let isDraggingSphere = false;
 
-let isDraggingCanvasWind = false;
-let lastMousePos = { x: 0, y: 0 };
+let isDraggingSphere = false;
+let isRightMouseWind = false;
+let lastRightMousePos = { x: 0, y: 0 };
 
 window.addEventListener('pointerdown', (e) => {
   if (e.target !== canvas) return;
@@ -182,19 +194,21 @@ window.addEventListener('pointerdown', (e) => {
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObject(sphereMesh);
+  if (e.button === 0) { // Left click
+    raycaster.setFromCamera(mouse, camera);
+    const intersects = raycaster.intersectObject(sphereMesh);
 
-  if (intersects.length > 0) {
-    isDraggingSphere = true;
-    controls.enabled = false;
-    dragPlane.setFromNormalAndCoplanarPoint(
-      camera.getWorldDirection(new THREE.Vector3()).negate(),
-      sphereMesh.position
-    );
-  } else if (e.button === 0) {
-    isDraggingCanvasWind = true;
-    lastMousePos = { x: e.clientX, y: e.clientY };
+    if (intersects.length > 0) {
+      isDraggingSphere = true;
+      controls.enabled = false;
+      dragPlane.setFromNormalAndCoplanarPoint(
+        camera.getWorldDirection(new THREE.Vector3()).negate(),
+        sphereMesh.position
+      );
+    }
+  } else if (e.button === 2) { // Right click for Wind
+    isRightMouseWind = true;
+    lastRightMousePos = { x: e.clientX, y: e.clientY };
   }
 });
 
@@ -214,24 +228,25 @@ window.addEventListener('pointermove', (e) => {
         uiController.syncSpherePosUI(clothSim.spherePos);
       }
     }
-  } else if (isDraggingCanvasWind) {
-    const dx = e.clientX - lastMousePos.x;
-    const dy = e.clientY - lastMousePos.y;
+  } else if (isRightMouseWind) {
+    const dx = e.clientX - lastRightMousePos.x;
+    const dy = e.clientY - lastRightMousePos.y;
 
-    const windScale = 0.8;
+    const windScale = 0.9;
     clothSim.mouseWind.x += dx * windScale;
     clothSim.mouseWind.y += -dy * windScale;
 
-    lastMousePos = { x: e.clientX, y: e.clientY };
+    lastRightMousePos = { x: e.clientX, y: e.clientY };
   }
 });
 
-window.addEventListener('pointerup', () => {
-  if (isDraggingSphere) {
+window.addEventListener('pointerup', (e) => {
+  if (e.button === 0 && isDraggingSphere) {
     isDraggingSphere = false;
     controls.enabled = true;
+  } else if (e.button === 2) {
+    isRightMouseWind = false;
   }
-  isDraggingCanvasWind = false;
 });
 
 const uiController = new UIController(clothSim, {
