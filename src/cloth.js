@@ -97,7 +97,7 @@ export class ClothConstraint {
 }
 
 export class ClothSimulator {
-  constructor(width = 8, height = 8, segmentsX = 26, segmentsY = 26) {
+  constructor(width = 8, height = 8, segmentsX = 32, segmentsY = 32) {
     this.width = width;
     this.height = height;
     this.segmentsX = segmentsX;
@@ -110,7 +110,7 @@ export class ClothSimulator {
 
     this.gravity = -9.8;
     this.damping = 0.98;
-    this.solverIterations = 16;
+    this.solverIterations = 20;
 
     this.windEnabled = false;
     this.windStrength = 12.0;
@@ -220,10 +220,12 @@ export class ClothSimulator {
     const numCols = this.segmentsX + 1;
     const numRows = this.segmentsY + 1;
     const getIdx = (c, r) => r * numCols + c;
+    const startX = -this.width / 2;
+    const startY = this.height / 2;
+    const dx = this.width / this.segmentsX;
 
     for (let p of this.particles) {
       p.pinned = false;
-      p.pinPosition = { x: p.x, y: p.y, z: p.z };
     }
 
     if (this.pinMode === 'top-2-corners') {
@@ -231,10 +233,19 @@ export class ClothSimulator {
       const p2 = this.particles[getIdx(this.segmentsX, 0)];
       p1.pinned = true;
       p2.pinned = true;
+      p1.pinPosition = { x: startX, y: startY, z: 0 };
+      p2.pinPosition = { x: startX + this.width, y: startY, z: 0 };
     } else if (this.pinMode === 'top-edge') {
       for (let c = 0; c <= this.segmentsX; c++) {
         const p = this.particles[getIdx(c, 0)];
+        p.x = startX + c * dx;
+        p.y = startY;
+        p.z = 0;
+        p.oldX = p.x;
+        p.oldY = p.y;
+        p.oldZ = p.z;
         p.pinned = true;
+        p.pinPosition = { x: p.x, y: startY, z: 0 };
       }
     } else if (this.pinMode === 'top-4-corners') {
       const p1 = this.particles[getIdx(0, 0)];
@@ -246,6 +257,11 @@ export class ClothSimulator {
       p2.pinned = true;
       p3.pinned = true;
       p4.pinned = true;
+
+      p1.pinPosition = { x: startX, y: startY, z: 0 };
+      p2.pinPosition = { x: startX + this.width, y: startY, z: 0 };
+      p3.pinPosition = { x: startX, y: -startY, z: 0 };
+      p4.pinPosition = { x: startX + this.width, y: -startY, z: 0 };
     }
   }
 
@@ -264,19 +280,22 @@ export class ClothSimulator {
         const ny = dy / dist;
         const nz = dz / dist;
 
+        // Position particle strictly outside sphere radius
         particle.x = this.spherePos.x + nx * effectiveRadius;
         particle.y = this.spherePos.y + ny * effectiveRadius;
         particle.z = this.spherePos.z + nz * effectiveRadius;
 
+        // Project velocity vector (x - oldX) onto sphere tangent plane.
+        // Zero out inward velocity component to prevent tunneling!
         const vx = particle.x - particle.oldX;
         const vy = particle.y - particle.oldY;
         const vz = particle.z - particle.oldZ;
-        const dot = vx * nx + vy * ny + vz * nz;
+        const inwardDot = vx * nx + vy * ny + vz * nz;
 
-        if (dot < 0) {
-          particle.oldX = particle.x - (vx - dot * nx) * 0.85;
-          particle.oldY = particle.y - (vy - dot * ny) * 0.85;
-          particle.oldZ = particle.z - (vz - dot * nz) * 0.85;
+        if (inwardDot < 0) {
+          particle.oldX = particle.x;
+          particle.oldY = particle.y;
+          particle.oldZ = particle.z;
         }
       }
     }
@@ -308,15 +327,25 @@ export class ClothSimulator {
       p.addForce(0, this.gravity * p.mass, 0);
 
       if (this.windEnabled) {
-        let turbulence = 1.0;
+        let windMultiplier = 1.0;
+        let waveX = 0;
+        let waveY = 0;
+
         if (this.windTurbulence) {
-          turbulence = 0.5 + 0.5 * Math.sin(timeSec * 4.0 + p.x * 0.5 + p.y * 0.3);
+          // Dynamic chaotic gusts & flapping ripples across the surface
+          const gust = 0.5 + 0.5 * Math.sin(timeSec * 5.0);
+          const ripple1 = Math.sin(timeSec * 8.0 + p.x * 1.2 + p.y * 0.8);
+          const ripple2 = Math.cos(timeSec * 12.0 + p.x * 0.5 - p.y * 1.5);
+
+          windMultiplier = 0.4 + 0.8 * gust;
+          waveX = (ripple1 + ripple2) * 0.5;
+          waveY = Math.sin(timeSec * 6.0 + p.x * 2.0) * 0.6;
         }
 
-        const windForceMag = this.windStrength * turbulence * 0.1;
+        const windForceMag = this.windStrength * windMultiplier * 0.12;
         p.addForce(
-          windDirX * windForceMag,
-          Math.sin(timeSec * 2.5 + p.x) * windForceMag * 0.4,
+          windDirX * windForceMag + waveX * windForceMag * 0.3,
+          waveY * windForceMag * 0.3,
           windDirZ * windForceMag
         );
       }
@@ -337,7 +366,6 @@ export class ClothSimulator {
     const colliderMargin = 0.05;
     const effectiveRadius = this.sphereRadius + colliderMargin;
 
-    // Iterative constraint relaxation & sphere collision
     for (let iter = 0; iter < this.solverIterations; iter++) {
       for (let c of this.constraints) {
         c.resolve();
@@ -354,7 +382,7 @@ export class ClothSimulator {
       }
     }
 
-    // Absolute final post-solver sphere collision pass to guarantee ZERO particle penetration
+    // Absolute final post-solver sphere collision pass guaranteeing ZERO penetration
     if (this.sphereEnabled) {
       for (let p of this.particles) {
         this.applySphereCollision(p, effectiveRadius);

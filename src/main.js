@@ -64,7 +64,6 @@ const fillLight = new THREE.DirectionalLight(0x94a3b8, 0.4);
 fillLight.position.set(-10, 6, -8);
 scene.add(fillLight);
 
-// Smaller Studio Floor Plane (28x28 unit size)
 const floorY = -4.0;
 const floorGeo = new THREE.PlaneGeometry(28, 28);
 const floorMat = new THREE.MeshStandardMaterial({
@@ -81,7 +80,7 @@ floor.position.y = floorY;
 floor.receiveShadow = true;
 scene.add(floor);
 
-const clothSim = new ClothSimulator(8, 8, 28, 28);
+const clothSim = new ClothSimulator(8, 8, 32, 32);
 clothSim.floorY = floorY;
 
 const numParticles = clothSim.particles.length;
@@ -147,7 +146,6 @@ clothMesh.castShadow = true;
 clothMesh.receiveShadow = true;
 scene.add(clothMesh);
 
-// Corner Pin Spheres & Top Clamp Bar Visuals
 const pinGeo = new THREE.SphereGeometry(0.14, 16, 16);
 const pinMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.8, roughness: 0.2 });
 
@@ -160,7 +158,7 @@ scene.add(pinMeshTopRight);
 scene.add(pinMeshBottomLeft);
 scene.add(pinMeshBottomRight);
 
-const topBarGeo = new THREE.CylinderGeometry(0.08, 0.08, clothSim.width + 0.3, 16);
+const topBarGeo = new THREE.CylinderGeometry(0.09, 0.09, clothSim.width + 0.4, 16);
 topBarGeo.rotateZ(Math.PI / 2);
 const topBarMesh = new THREE.Mesh(topBarGeo, pinMat);
 topBarMesh.visible = false;
@@ -180,9 +178,7 @@ function updatePinVisuals() {
     pinMeshBottomRight.visible = false;
 
     topBarMesh.visible = true;
-    if (pTopLeft && pTopRight) {
-      topBarMesh.position.set((pTopLeft.x + pTopRight.x) / 2, pTopLeft.y, (pTopLeft.z + pTopRight.z) / 2);
-    }
+    topBarMesh.position.set(0, 4.0, 0);
   } else if (clothSim.pinMode === 'top-4-corners') {
     topBarMesh.visible = false;
     pinMeshTopLeft.visible = true;
@@ -238,10 +234,10 @@ const arrowMaterial = new THREE.MeshStandardMaterial({
   emissive: 0x440000
 });
 
-const shaftGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 16); // Thick 0.24 diameter shaft
+const shaftGeo = new THREE.CylinderGeometry(0.12, 0.12, 1, 16);
 shaftGeo.translate(0, 0.5, 0);
 
-const coneGeo = new THREE.ConeGeometry(0.35, 0.7, 16); // Bold head tip
+const coneGeo = new THREE.ConeGeometry(0.35, 0.7, 16);
 coneGeo.translate(0, 0.35, 0);
 
 const shaftMesh = new THREE.Mesh(shaftGeo, arrowMaterial);
@@ -250,7 +246,7 @@ const coneMesh = new THREE.Mesh(coneGeo, arrowMaterial);
 const windArrowGroup = new THREE.Group();
 windArrowGroup.add(shaftMesh);
 windArrowGroup.add(coneMesh);
-windArrowGroup.visible = false; // Hidden by default, appears ONLY while dragging right mouse
+windArrowGroup.visible = false;
 scene.add(windArrowGroup);
 
 const raycaster = new THREE.Raycaster();
@@ -271,7 +267,7 @@ window.addEventListener('pointerdown', (e) => {
   mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
   mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
-  if (e.button === 0) { // Left click: Drag sphere or orbit camera
+  if (e.button === 0) {
     raycaster.setFromCamera(mouse, camera);
     const intersects = raycaster.intersectObject(sphereMesh);
 
@@ -283,7 +279,7 @@ window.addEventListener('pointerdown', (e) => {
         sphereMesh.position
       );
     }
-  } else if (e.button === 2) { // Right click: Draw thick 3D Wind Arrow
+  } else if (e.button === 2) {
     isRightMouseWind = true;
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(windRayPlane, planeIntersection)) {
@@ -319,20 +315,16 @@ window.addEventListener('pointermove', (e) => {
       if (len > 0.1) {
         dirVec.normalize();
 
-        // Position arrow group at drag start
         windArrowGroup.position.copy(dragStart3D);
 
-        // Rotate arrow along vector direction
         const up = new THREE.Vector3(0, 1, 0);
         const q = new THREE.Quaternion().setFromUnitVectors(up, dirVec);
         windArrowGroup.setRotationFromQuaternion(q);
 
-        // Adjust thick shaft length and cone tip position
         const shaftLen = Math.max(0.5, len);
         shaftMesh.scale.set(1, shaftLen, 1);
         coneMesh.position.set(0, shaftLen, 0);
 
-        // Calculate wind angle and apply force
         const angleRad = Math.atan2(dirVec.z, dirVec.x);
         let angleDeg = Math.round((angleRad * 180) / Math.PI);
         if (angleDeg < 0) angleDeg += 360;
@@ -361,7 +353,7 @@ window.addEventListener('pointerup', (e) => {
     controls.enabled = true;
   } else if (e.button === 2) {
     isRightMouseWind = false;
-    windArrowGroup.visible = false; // Hide 3D arrow on release as requested!
+    windArrowGroup.visible = false;
   }
 });
 
