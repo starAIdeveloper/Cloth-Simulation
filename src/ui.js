@@ -92,14 +92,6 @@ export class UIController {
       this.clothSim.windTurbulence = e.target.checked;
     });
 
-    const chkSphere = document.getElementById('chk-sphere-enable');
-    chkSphere.addEventListener('change', (e) => {
-      this.clothSim.sphereEnabled = e.target.checked;
-      if (this.sceneCallbacks.setSphereVisible) {
-        this.sceneCallbacks.setSphereVisible(e.target.checked);
-      }
-    });
-
     this.bindSlider('sld-sphere-radius', 'val-sphere-radius', (val) => {
       const r = parseFloat(val);
       this.clothSim.sphereRadius = r;

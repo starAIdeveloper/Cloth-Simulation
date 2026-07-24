@@ -181,7 +181,9 @@ updateSphereScale(clothSim.sphereRadius);
 
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
-const dragPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+
+// Horizontal drag plane (Normal pointing straight up (0, 1, 0) parallel to floor plane)
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 const planeIntersection = new THREE.Vector3();
 
 let isDraggingSphere = false;
@@ -201,8 +203,9 @@ window.addEventListener('pointerdown', (e) => {
     if (intersects.length > 0) {
       isDraggingSphere = true;
       controls.enabled = false;
+      // Lock drag plane to the horizontal plane at the sphere's current Y height
       dragPlane.setFromNormalAndCoplanarPoint(
-        camera.getWorldDirection(new THREE.Vector3()).negate(),
+        new THREE.Vector3(0, 1, 0),
         sphereMesh.position
       );
     }
@@ -219,9 +222,10 @@ window.addEventListener('pointermove', (e) => {
   if (isDraggingSphere) {
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
-      sphereMesh.position.copy(planeIntersection);
+      sphereMesh.position.x = planeIntersection.x;
+      sphereMesh.position.z = planeIntersection.z;
+
       clothSim.spherePos.x = sphereMesh.position.x;
-      clothSim.spherePos.y = sphereMesh.position.y;
       clothSim.spherePos.z = sphereMesh.position.z;
 
       if (uiController) {
@@ -250,9 +254,6 @@ window.addEventListener('pointerup', (e) => {
 });
 
 const uiController = new UIController(clothSim, {
-  setSphereVisible: (visible) => {
-    sphereMesh.visible = visible;
-  },
   updateSphereScale: (radius) => {
     updateSphereScale(radius);
   },

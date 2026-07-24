@@ -112,7 +112,8 @@ export class ClothSimulator {
     this.damping = 0.98;
     this.solverIterations = 12;
 
-    this.windEnabled = true;
+    // Default wind is disabled as requested
+    this.windEnabled = false;
     this.windStrength = 12.0;
     this.windAngle = 45;
     this.windTurbulence = true;
@@ -276,7 +277,6 @@ export class ClothSimulator {
   applyFloorCollision(particle) {
     if (particle.pinned || !this.floorEnabled) return;
 
-    // Small offset margin (0.03m) above floor plane to eliminate Z-fighting flickering completely
     const floorMargin = 0.03;
     const targetY = this.floorY + floorMargin;
 
@@ -284,7 +284,6 @@ export class ClothSimulator {
       particle.y = targetY;
       particle.oldY = targetY;
 
-      // Surface friction damping
       particle.oldX = particle.x - (particle.x - particle.oldX) * 0.65;
       particle.oldZ = particle.z - (particle.z - particle.oldZ) * 0.65;
     }
