@@ -110,7 +110,7 @@ export class ClothSimulator {
 
     this.gravity = -9.8;
     this.damping = 0.98;
-    this.solverIterations = 20;
+    this.solverIterations = 24;
 
     this.windEnabled = false;
     this.windStrength = 12.0;
@@ -121,7 +121,8 @@ export class ClothSimulator {
 
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
-    this.spherePos = { x: 0, y: 0, z: 0 };
+    this.spherePos = { x: 0, y: -1.2, z: 0.8 };
+    this.prevSpherePos = { x: 0, y: -1.2, z: 0.8 };
 
     this.floorEnabled = true;
     this.floorY = -4.0;
@@ -265,38 +266,40 @@ export class ClothSimulator {
     }
   }
 
-  applySphereCollision(particle, effectiveRadius) {
+  applySphereCollision(particle, effectiveRadius, currentSpherePos) {
     if (particle.pinned) return;
 
-    const dx = particle.x - this.spherePos.x;
-    const dy = particle.y - this.spherePos.y;
-    const dz = particle.z - this.spherePos.z;
+    const dx = particle.x - currentSpherePos.x;
+    const dy = particle.y - currentSpherePos.y;
+    const dz = particle.z - currentSpherePos.z;
 
     const distSq = dx * dx + dy * dy + dz * dz;
     if (distSq < effectiveRadius * effectiveRadius) {
       const dist = Math.sqrt(distSq);
-      if (dist > 0.00001) {
-        const nx = dx / dist;
-        const ny = dy / dist;
-        const nz = dz / dist;
+      let nx = 0, ny = 0, nz = 1;
 
-        // Position particle strictly outside sphere radius
-        particle.x = this.spherePos.x + nx * effectiveRadius;
-        particle.y = this.spherePos.y + ny * effectiveRadius;
-        particle.z = this.spherePos.z + nz * effectiveRadius;
+      if (dist > 0.0001) {
+        nx = dx / dist;
+        ny = dy / dist;
+        nz = dz / dist;
+      }
 
-        // Project velocity vector (x - oldX) onto sphere tangent plane.
-        // Zero out inward velocity component to prevent tunneling!
-        const vx = particle.x - particle.oldX;
-        const vy = particle.y - particle.oldY;
-        const vz = particle.z - particle.oldZ;
-        const inwardDot = vx * nx + vy * ny + vz * nz;
+      // Position particle strictly outside sphere radius
+      particle.x = currentSpherePos.x + nx * effectiveRadius;
+      particle.y = currentSpherePos.y + ny * effectiveRadius;
+      particle.z = currentSpherePos.z + nz * effectiveRadius;
 
-        if (inwardDot < 0) {
-          particle.oldX = particle.x;
-          particle.oldY = particle.y;
-          particle.oldZ = particle.z;
-        }
+      // Project Verlet velocity (oldX, oldY, oldZ) onto the sphere surface
+      // Zero out inward velocity vector to prevent tunneling
+      const vx = particle.x - particle.oldX;
+      const vy = particle.y - particle.oldY;
+      const vz = particle.z - particle.oldZ;
+      const inwardDot = vx * nx + vy * ny + vz * nz;
+
+      if (inwardDot < 0) {
+        particle.oldX = particle.x;
+        particle.oldY = particle.y;
+        particle.oldZ = particle.z;
       }
     }
   }
@@ -332,7 +335,6 @@ export class ClothSimulator {
         let waveY = 0;
 
         if (this.windTurbulence) {
-          // Dynamic chaotic gusts & flapping ripples across the surface
           const gust = 0.5 + 0.5 * Math.sin(timeSec * 5.0);
           const ripple1 = Math.sin(timeSec * 8.0 + p.x * 1.2 + p.y * 0.8);
           const ripple2 = Math.cos(timeSec * 12.0 + p.x * 0.5 - p.y * 1.5);
@@ -373,7 +375,7 @@ export class ClothSimulator {
 
       if (this.sphereEnabled) {
         for (let p of this.particles) {
-          this.applySphereCollision(p, effectiveRadius);
+          this.applySphereCollision(p, effectiveRadius, this.spherePos);
         }
       }
 
@@ -382,12 +384,15 @@ export class ClothSimulator {
       }
     }
 
-    // Absolute final post-solver sphere collision pass guaranteeing ZERO penetration
     if (this.sphereEnabled) {
       for (let p of this.particles) {
-        this.applySphereCollision(p, effectiveRadius);
+        this.applySphereCollision(p, effectiveRadius, this.spherePos);
       }
     }
+
+    this.prevSpherePos.x = this.spherePos.x;
+    this.prevSpherePos.y = this.spherePos.y;
+    this.prevSpherePos.z = this.spherePos.z;
   }
 
   updatePositionBuffer(positions) {

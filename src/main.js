@@ -302,6 +302,7 @@ window.addEventListener('pointermove', (e) => {
       sphereMesh.position.z = planeIntersection.z;
 
       clothSim.spherePos.x = sphereMesh.position.x;
+      clothSim.spherePos.y = sphereMesh.position.y;
       clothSim.spherePos.z = sphereMesh.position.z;
     }
   } else if (isRightMouseWind) {
@@ -382,7 +383,7 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
 
   if (!uiController.isPaused) {
-    const subSteps = 3;
+    const subSteps = 6;
     const subDt = fixedDeltaTime / subSteps;
     for (let i = 0; i < subSteps; i++) {
       clothSim.step(subDt, elapsedTime);
