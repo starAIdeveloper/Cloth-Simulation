@@ -1,0 +1,355 @@
+/* Reset & Base Layout */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #0b0c10;
+  font-family: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+  color: #c5c6c7;
+}
+
+#app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#webgl-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ==========================================================================
+   Dear ImGui Theme Styling
+   ========================================================================== */
+
+/* Hamburger Toggle Button (Shown when ImGui is collapsed) */
+.imgui-hamburger-btn {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  width: 44px;
+  height: 44px;
+  background: #181920;
+  border: 1px solid #00b4d8;
+  border-radius: 6px;
+  color: #00b4d8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 180, 216, 0.3);
+  transition: all 0.2s ease-in-out;
+}
+
+.imgui-hamburger-btn:hover {
+  background: #00b4d8;
+  color: #181920;
+  transform: scale(1.05);
+}
+
+.imgui-hamburger-btn.hidden {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Main ImGui Window */
+.imgui-window {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 999;
+  width: 320px;
+  max-height: calc(100vh - 32px);
+  background: rgba(20, 21, 28, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid #2e3146;
+  border-radius: 4px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #d1d5db;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.imgui-window.collapsed {
+  opacity: 0;
+  transform: scale(0.95) translateY(-10px);
+  pointer-events: none;
+  display: none !important;
+}
+
+/* ImGui Header (Titlebar) */
+.imgui-header {
+  background: #252836;
+  border-bottom: 1px solid #363a50;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.imgui-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ffffff;
+  font-size: 12px;
+}
+
+.imgui-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00b4d8;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00b4d8;
+}
+
+.imgui-header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.imgui-fps-badge {
+  background: #11131a;
+  border: 1px solid #00b4d8;
+  color: #00b4d8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.imgui-close-btn {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.imgui-close-btn:hover {
+  color: #ff4d4d;
+}
+
+/* ImGui Content Body */
+.imgui-content {
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Custom Scrollbar for ImGui Window */
+.imgui-content::-webkit-scrollbar {
+  width: 6px;
+}
+.imgui-content::-webkit-scrollbar-track {
+  background: #14151c;
+}
+.imgui-content::-webkit-scrollbar-thumb {
+  background: #363a50;
+  border-radius: 3px;
+}
+.imgui-content::-webkit-scrollbar-thumb:hover {
+  background: #00b4d8;
+}
+
+/* ImGui Groups / Collapsible Sections */
+.imgui-group {
+  background: #181a24;
+  border: 1px solid #282b3d;
+  border-radius: 3px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.imgui-group-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #00b4d8;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px dashed #2e3248;
+  padding-bottom: 4px;
+  margin-bottom: 2px;
+}
+
+/* Rows & Controls */
+.imgui-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.imgui-checkbox-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.imgui-label {
+  font-size: 11px;
+  color: #9ca3af;
+  display: flex;
+  justify-content: space-between;
+}
+
+.imgui-label span {
+  color: #00b4d8;
+  font-weight: 700;
+}
+
+/* Sliders */
+.imgui-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #111319;
+  border-radius: 3px;
+  outline: none;
+  border: 1px solid #2d3144;
+}
+
+.imgui-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  background: #00b4d8;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 180, 216, 0.6);
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.imgui-slider::-webkit-slider-thumb:hover {
+  background: #48cae4;
+  transform: scale(1.15);
+}
+
+/* Checkboxes */
+.imgui-checkbox {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #111319;
+  border: 1px solid #3b3f58;
+  border-radius: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.imgui-checkbox:checked {
+  background: #00b4d8;
+  border-color: #00b4d8;
+}
+
+.imgui-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -2px;
+  left: 1px;
+  font-size: 11px;
+  color: #111319;
+  font-weight: bold;
+}
+
+/* Select & Inputs */
+.imgui-select, .imgui-color-picker {
+  background: #111319;
+  border: 1px solid #2d3144;
+  color: #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  outline: none;
+  cursor: pointer;
+}
+
+.imgui-select:focus, .imgui-color-picker:focus {
+  border-color: #00b4d8;
+}
+
+.imgui-color-picker {
+  width: 100%;
+  height: 28px;
+  padding: 2px;
+}
+
+/* Buttons */
+.imgui-btn-row {
+  display: flex;
+  gap: 8px;
+}
+
+.imgui-btn {
+  flex: 1;
+  background: #252836;
+  border: 1px solid #363a50;
+  color: #e5e7eb;
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.imgui-btn:hover {
+  background: #363a50;
+  border-color: #00b4d8;
+  color: #ffffff;
+}
+
+.imgui-btn-accent {
+  background: #00b4d8;
+  border-color: #00b4d8;
+  color: #111319;
+}
+
+.imgui-btn-accent:hover {
+  background: #48cae4;
+  border-color: #48cae4;
+  color: #111319;
+}
+
+/* Tooltip tip footer */
+.imgui-footer-tip {
+  font-size: 10px;
+  color: #6b7280;
+  background: #111218;
+  border: 1px solid #222533;
+  padding: 6px;
+  border-radius: 3px;
+  line-height: 1.3;
+}

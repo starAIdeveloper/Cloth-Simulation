@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebGL Cloth Simulation - Custom Verlet Physics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Dear ImGui Collapsed Icon (Hamburger Menu) -->
+    <button id="imgui-toggle-btn" class="imgui-hamburger-btn hidden" title="Open Settings (ImGui)">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"></line>
+        <line x1="3" y1="12" x2="21" y2="12"></line>
+        <line x1="3" y1="18" x2="21" y2="18"></line>
+      </svg>
+    </button>
+
+    <!-- Dear ImGui Overlay Window -->
+    <div id="imgui-panel" class="imgui-window">
+      <!-- ImGui Titlebar -->
+      <div class="imgui-header">
+        <span class="imgui-title">
+          <span class="imgui-dot"></span> ClothSim v1.0 [WebGL Physics]
+        </span>
+        <div class="imgui-header-right">
+          <span id="imgui-fps" class="imgui-fps-badge">60.0 FPS</span>
+          <button id="imgui-close-btn" class="imgui-close-btn" title="Collapse Window">✕</button>
+        </div>
+      </div>
+
+      <!-- ImGui Content Area -->
+      <div class="imgui-content">
+        <!-- Section: Presets & Controls -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">SIMULATION CONTROL</div>
+          <div class="imgui-btn-row">
+            <button id="btn-pause" class="imgui-btn">Pause</button>
+            <button id="btn-reset" class="imgui-btn imgui-btn-accent">Reset Cloth</button>
+          </div>
+        </div>
+
+        <!-- Section: Pinning Config -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">PINNING SETUP</div>
+          <div class="imgui-row">
+            <label class="imgui-label">Pin Mode:</label>
+            <select id="sel-pin-mode" class="imgui-select">
+              <option value="top-2-corners" selected>2 Top Corners (Requested)</option>
+              <option value="top-edge">Full Top Edge</option>
+              <option value="top-4-corners">4 Corners</option>
+              <option value="none">Free Hanging (No Pins)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Section: Physics Properties -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">PHYSICS PARAMS</div>
+          
+          <div class="imgui-row">
+            <label for="sld-gravity" class="imgui-label">Gravity Y: <span id="val-gravity">-9.8</span></label>
+            <input type="range" id="sld-gravity" min="-25" max="5" step="0.5" value="-9.8" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-damping" class="imgui-label">Air Damping: <span id="val-damping">0.98</span></label>
+            <input type="range" id="sld-damping" min="0.90" max="0.999" step="0.005" value="0.98" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-stiffness" class="imgui-label">Solver Iterations: <span id="val-stiffness">8</span></label>
+            <input type="range" id="sld-stiffness" min="1" max="25" step="1" value="8" class="imgui-slider" />
+          </div>
+        </div>
+
+        <!-- Section: Wind Forces -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">WIND SIMULATION</div>
+          
+          <div class="imgui-row imgui-checkbox-row">
+            <input type="checkbox" id="chk-wind-enable" checked class="imgui-checkbox" />
+            <label for="chk-wind-enable" class="imgui-label">Enable Wind Force</label>
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-wind-strength" class="imgui-label">Wind Strength: <span id="val-wind-strength">12.0</span></label>
+            <input type="range" id="sld-wind-strength" min="0" max="50" step="1" value="12" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-wind-angle" class="imgui-label">Wind Angle: <span id="val-wind-angle">45°</span></label>
+            <input type="range" id="sld-wind-angle" min="0" max="360" step="5" value="45" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row imgui-checkbox-row">
+            <input type="checkbox" id="chk-wind-turbulence" checked class="imgui-checkbox" />
+            <label for="chk-wind-turbulence" class="imgui-label">Turbulence / Gusts</label>
+          </div>
+        </div>
+
+        <!-- Section: Sphere Interaction -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">SPHERE COLLIDER</div>
+          
+          <div class="imgui-row imgui-checkbox-row">
+            <input type="checkbox" id="chk-sphere-enable" checked class="imgui-checkbox" />
+            <label for="chk-sphere-enable" class="imgui-label">Enable Sphere Collider</label>
+          </div>
+
+          <div class="imgui-row imgui-checkbox-row">
+            <input type="checkbox" id="chk-sphere-animate" checked class="imgui-checkbox" />
+            <label for="chk-sphere-animate" class="imgui-label">Auto Orbit Motion</label>
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-sphere-radius" class="imgui-label">Sphere Radius: <span id="val-sphere-radius">1.8</span></label>
+            <input type="range" id="sld-sphere-radius" min="0.5" max="3.5" step="0.1" value="1.8" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-sphere-pos-x" class="imgui-label">Position X: <span id="val-sphere-pos-x">0.0</span></label>
+            <input type="range" id="sld-sphere-pos-x" min="-4" max="4" step="0.1" value="0.0" class="imgui-slider" />
+          </div>
+
+          <div class="imgui-row">
+            <label for="sld-sphere-pos-z" class="imgui-label">Position Z: <span id="val-sphere-pos-z">0.0</span></label>
+            <input type="range" id="sld-sphere-pos-z" min="-4" max="4" step="0.1" value="0.0" class="imgui-slider" />
+          </div>
+        </div>
+
+        <!-- Section: Appearance & Rendering -->
+        <div class="imgui-group">
+          <div class="imgui-group-title">APPEARANCE & RENDER</div>
+          
+          <div class="imgui-row">
+            <label class="imgui-label">Render Mode:</label>
+            <select id="sel-render-mode" class="imgui-select">
+              <option value="solid" selected>Solid Silk Fabric</option>
+              <option value="wireframe">Wireframe Mesh</option>
+              <option value="points">Particles (Nodes)</option>
+            </select>
+          </div>
+
+          <div class="imgui-row">
+            <label class="imgui-label">Cloth Material / Color:</label>
+            <input type="color" id="col-cloth" value="#3a86ff" class="imgui-color-picker" />
+          </div>
+
+          <div class="imgui-row imgui-checkbox-row">
+            <input type="checkbox" id="chk-shadows" checked class="imgui-checkbox" />
+            <label for="chk-shadows" class="imgui-label">Enable Shadows</label>
+          </div>
+        </div>
+
+        <div class="imgui-footer-tip">
+          💡 Drag sphere/cloth with Left Mouse. Rotate camera with Right Mouse/Orbit.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
