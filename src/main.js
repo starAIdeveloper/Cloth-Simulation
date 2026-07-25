@@ -209,7 +209,7 @@ function updatePinVisuals() {
 }
 updatePinVisuals();
 
-const sphereGeo = new THREE.SphereGeometry(1.8, 32, 32);
+const sphereGeo = new THREE.SphereGeometry(1.3, 32, 32);
 const sphereMat = new THREE.MeshStandardMaterial({
   color: 0xe11d48,
   roughness: 0.2,
@@ -221,7 +221,7 @@ sphereMesh.castShadow = true;
 sphereMesh.receiveShadow = true;
 scene.add(sphereMesh);
 
-clothSim.sphereRadius = 1.8;
+clothSim.sphereRadius = 1.3;
 clothSim.spherePos.x = sphereMesh.position.x;
 clothSim.spherePos.y = sphereMesh.position.y;
 clothSim.spherePos.z = sphereMesh.position.z;

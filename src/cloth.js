@@ -15,6 +15,7 @@ export class ClothParticle {
     this.mass = mass;
     this.pinned = false;
     this.pinPosition = { x, y, z };
+    this.onSphere = false;
   }
 
   addForce(fx, fy, fz) {
@@ -32,9 +33,11 @@ export class ClothParticle {
       return;
     }
 
-    const vx = (this.x - this.oldX) * damping;
-    const vy = (this.y - this.oldY) * damping;
-    const vz = (this.z - this.oldZ) * damping;
+    const effectiveDamping = this.onSphere ? damping * 0.7 : damping;
+
+    const vx = (this.x - this.oldX) * effectiveDamping;
+    const vy = (this.y - this.oldY) * effectiveDamping;
+    const vz = (this.z - this.oldZ) * effectiveDamping;
 
     this.oldX = this.x;
     this.oldY = this.y;
@@ -120,7 +123,7 @@ export class ClothSimulator {
     this.mouseWind = { x: 0, y: 0, z: 0 };
 
     this.sphereEnabled = true;
-    this.sphereRadius = 1.8;
+    this.sphereRadius = 1.3;
     this.spherePos = { x: 0, y: -1.2, z: 1.2 };
 
     this.floorEnabled = true;
@@ -285,6 +288,7 @@ export class ClothSimulator {
       particle.x = currentSpherePos.x + nx * effectiveRadius;
       particle.y = currentSpherePos.y + ny * effectiveRadius;
       particle.z = currentSpherePos.z + nz * effectiveRadius;
+      particle.onSphere = true;
     }
   }
 
@@ -304,6 +308,10 @@ export class ClothSimulator {
   }
 
   step(dt, timeSec = 0) {
+    for (let p of this.particles) {
+      p.onSphere = false;
+    }
+
     const rad = (this.windAngle * Math.PI) / 180;
     const windDirX = Math.cos(rad);
     const windDirZ = Math.sin(rad);
