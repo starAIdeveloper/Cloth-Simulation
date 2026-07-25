@@ -370,7 +370,7 @@ function animate() {
   const elapsedTime = clock.getElapsedTime();
 
   if (!uiController.isPaused) {
-    const subSteps = 6;
+    const subSteps = 4;
     const subDt = fixedDeltaTime / subSteps;
     for (let i = 0; i < subSteps; i++) {
       clothSim.step(subDt, elapsedTime);

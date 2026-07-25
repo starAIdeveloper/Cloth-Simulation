@@ -62,6 +62,7 @@ export class ClothConstraint {
     const dy = p1.y - p2.y;
     const dz = p1.z - p2.z;
     this.restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    this.restLengthSq = this.restLength * this.restLength;
   }
 
   resolve() {
@@ -69,13 +70,13 @@ export class ClothConstraint {
     const dy = this.p2.y - this.p1.y;
     const dz = this.p2.z - this.p1.z;
 
-    const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-    if (dist === 0) return;
+    const distSq = dx * dx + dy * dy + dz * dz;
+    if (distSq === 0) return;
 
-    const diff = (dist - this.restLength) / dist;
-    const offsetX = dx * 0.5 * diff * this.stiffness;
-    const offsetY = dy * 0.5 * diff * this.stiffness;
-    const offsetZ = dz * 0.5 * diff * this.stiffness;
+    const diff = ((distSq - this.restLengthSq) / (distSq + this.restLengthSq)) * this.stiffness;
+    const offsetX = dx * diff;
+    const offsetY = dy * diff;
+    const offsetZ = dz * diff;
 
     if (!this.p1.pinned && !this.p2.pinned) {
       this.p1.x += offsetX;
@@ -111,7 +112,7 @@ export class ClothSimulator {
 
     this.gravity = -9.8;
     this.damping = 0.98;
-    this.solverIterations = 24;
+    this.solverIterations = 12;
 
     this.windEnabled = false;
     this.windStrength = 12.0;
