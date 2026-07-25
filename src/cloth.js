@@ -144,20 +144,41 @@ export class ClothSimulator {
     const dy = this.height / this.segmentsY;
 
     const startX = -this.width / 2;
-    const startY = this.height / 2;
 
-    for (let r = 0; r < numRows; r++) {
-      for (let c = 0; c < numCols; c++) {
-        const x = startX + c * dx;
-        const y = startY - r * dy;
-        const z = 0;
+    if (this.pinMode === 'none') {
+      const startZ = -this.height / 2;
+      const startY = 2.0;
 
-        const particle = new ClothParticle(x, y, z);
-        this.particles.push(particle);
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          const x = startX + c * dx;
+          const z = startZ + r * dy;
+          const y = startY;
 
-        const u = c / this.segmentsX;
-        const v = 1.0 - r / this.segmentsY;
-        this.uvs.push(u, v);
+          const particle = new ClothParticle(x, y, z);
+          this.particles.push(particle);
+
+          const u = c / this.segmentsX;
+          const v = 1.0 - r / this.segmentsY;
+          this.uvs.push(u, v);
+        }
+      }
+    } else {
+      const startY = this.height / 2;
+
+      for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+          const x = startX + c * dx;
+          const y = startY - r * dy;
+          const z = 0;
+
+          const particle = new ClothParticle(x, y, z);
+          this.particles.push(particle);
+
+          const u = c / this.segmentsX;
+          const v = 1.0 - r / this.segmentsY;
+          this.uvs.push(u, v);
+        }
       }
     }
 
@@ -213,7 +234,22 @@ export class ClothSimulator {
 
   setPinMode(mode) {
     this.pinMode = mode;
-    this.applyPinning();
+
+    if (mode === 'none') {
+      this.spherePos.x = 0;
+      this.spherePos.y = -0.5;
+      this.spherePos.z = 0;
+    } else {
+      this.spherePos.x = 0;
+      this.spherePos.y = -1.2;
+      this.spherePos.z = 1.2;
+    }
+
+    this.initGrid();
+
+    if (this.onSphereMoved) {
+      this.onSphereMoved(this.spherePos);
+    }
   }
 
   applyPinning() {

@@ -261,8 +261,7 @@ const planeIntersection = new THREE.Vector3();
 
 let isDraggingSphere = false;
 let isRightMouseWind = false;
-const dragStart3D = new THREE.Vector3();
-const dragCurrent3D = new THREE.Vector3();
+const dragStartPos2D = new THREE.Vector2();
 
 window.addEventListener('pointerdown', (e) => {
   if (e.target !== canvas) return;
@@ -284,12 +283,7 @@ window.addEventListener('pointerdown', (e) => {
     }
   } else if (e.button === 2) {
     isRightMouseWind = true;
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.ray.intersectPlane(windRayPlane, planeIntersection)) {
-      dragStart3D.copy(planeIntersection);
-    } else {
-      dragStart3D.set(0, 0, 0);
-    }
+    dragStartPos2D.set(e.clientX, e.clientY);
     windArrowGroup.visible = true;
   }
 });
@@ -309,44 +303,34 @@ window.addEventListener('pointermove', (e) => {
       clothSim.spherePos.z = sphereMesh.position.z;
     }
   } else if (isRightMouseWind) {
-    raycaster.setFromCamera(mouse, camera);
-    if (raycaster.ray.intersectPlane(windRayPlane, planeIntersection)) {
-      dragCurrent3D.copy(planeIntersection);
+    const deltaX = e.clientX - dragStartPos2D.x;
+    const deltaY = e.clientY - dragStartPos2D.y;
 
-      const dirVec = new THREE.Vector3().subVectors(dragCurrent3D, dragStart3D);
-      const len = dirVec.length();
+    const len = Math.hypot(deltaX, deltaY);
 
-      if (len > 0.1) {
-        dirVec.normalize();
+    if (len > 5) {
+      const camRight = new THREE.Vector3();
+      const camUp = new THREE.Vector3();
+      camera.matrixWorld.extractBasis(camRight, camUp, new THREE.Vector3());
 
-        windArrowGroup.position.copy(dragStart3D);
+      const windDir = new THREE.Vector3()
+        .addScaledVector(camRight, deltaX)
+        .addScaledVector(camUp, -deltaY)
+        .normalize();
 
-        const up = new THREE.Vector3(0, 1, 0);
-        const q = new THREE.Quaternion().setFromUnitVectors(up, dirVec);
-        windArrowGroup.setRotationFromQuaternion(q);
+      const windForceMag = Math.min(len * 0.12, 16.0);
+      clothSim.mouseWind.x = windDir.x * windForceMag;
+      clothSim.mouseWind.y = windDir.y * windForceMag;
+      clothSim.mouseWind.z = windDir.z * windForceMag;
 
-        const shaftLen = Math.max(0.5, Math.min(3.5, len));
-        shaftMesh.scale.set(1, shaftLen, 1);
-        coneMesh.position.set(0, shaftLen, 0);
+      windArrowGroup.position.copy(clothSim.spherePos).add(new THREE.Vector3(0, 1.5, 0));
+      const up = new THREE.Vector3(0, 1, 0);
+      const q = new THREE.Quaternion().setFromUnitVectors(up, windDir);
+      windArrowGroup.setRotationFromQuaternion(q);
 
-        const angleRad = Math.atan2(dirVec.z, dirVec.x);
-        let angleDeg = Math.round((angleRad * 180) / Math.PI);
-        if (angleDeg < 0) angleDeg += 360;
-
-        clothSim.windAngle = angleDeg;
-        clothSim.windEnabled = true;
-
-        const windForceMag = Math.min(len * 2.0, 12.0);
-        clothSim.mouseWind.x = dirVec.x * windForceMag;
-        clothSim.mouseWind.y = dirVec.y * windForceMag;
-        clothSim.mouseWind.z = dirVec.z * windForceMag;
-
-        if (uiController) {
-          uiController.syncWindAngleUI(clothSim.windAngle);
-          const chkWind = document.getElementById('chk-wind-enable');
-          if (chkWind) chkWind.checked = true;
-        }
-      }
+      const shaftLen = Math.max(0.5, Math.min(3.5, len * 0.015));
+      shaftMesh.scale.set(1, shaftLen, 1);
+      coneMesh.position.set(0, shaftLen, 0);
     }
   }
 });
