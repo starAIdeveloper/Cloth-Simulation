@@ -216,7 +216,7 @@ const sphereMat = new THREE.MeshStandardMaterial({
   metalness: 0.7
 });
 const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-sphereMesh.position.set(0, -1.2, 0.8);
+sphereMesh.position.set(0, -1.2, 2.0);
 sphereMesh.castShadow = true;
 sphereMesh.receiveShadow = true;
 scene.add(sphereMesh);
@@ -298,20 +298,8 @@ window.addEventListener('pointermove', (e) => {
   if (isDraggingSphere) {
     raycaster.setFromCamera(mouse, camera);
     if (raycaster.ray.intersectPlane(dragPlane, planeIntersection)) {
-      let targetX = planeIntersection.x;
-      let targetZ = planeIntersection.z;
-
-      // Limit max sphere displacement based on pinning elasticity
-      if (clothSim.pinMode === 'top-4-corners') {
-        targetZ = Math.max(-1.2, Math.min(1.4, targetZ));
-        targetX = Math.max(-2.6, Math.min(2.6, targetX));
-      } else if (clothSim.pinMode === 'top-edge' || clothSim.pinMode === 'top-2-corners') {
-        targetZ = Math.max(-3.0, Math.min(3.0, targetZ));
-        targetX = Math.max(-3.5, Math.min(3.5, targetX));
-      }
-
-      sphereMesh.position.x = targetX;
-      sphereMesh.position.z = targetZ;
+      sphereMesh.position.x = planeIntersection.x;
+      sphereMesh.position.z = planeIntersection.z;
 
       clothSim.spherePos.x = sphereMesh.position.x;
       clothSim.spherePos.y = sphereMesh.position.y;

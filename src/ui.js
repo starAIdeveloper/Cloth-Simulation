@@ -33,15 +33,16 @@ export class UIController {
     const panel = document.getElementById('ui-panel');
     const closeBtn = document.getElementById('ui-close-btn');
     const hamburgerBtn = document.getElementById('ui-toggle-btn');
+    const topActions = document.getElementById('ui-top-actions');
 
     closeBtn.addEventListener('click', () => {
       panel.classList.add('collapsed');
-      hamburgerBtn.classList.remove('hidden');
+      if (topActions) topActions.classList.remove('hidden');
     });
 
     hamburgerBtn.addEventListener('click', () => {
       panel.classList.remove('collapsed');
-      hamburgerBtn.classList.add('hidden');
+      if (topActions) topActions.classList.add('hidden');
     });
 
     const pauseBtn = document.getElementById('btn-pause');
@@ -75,25 +76,11 @@ export class UIController {
     }, (v) => v);
 
     const chkWind = document.getElementById('chk-wind-enable');
-    chkWind.addEventListener('change', (e) => {
-      this.clothSim.windEnabled = e.target.checked;
-    });
-
-    this.bindSlider('sld-wind-strength', 'val-wind-strength', (val) => {
-      this.clothSim.windStrength = parseFloat(val);
-    }, (v) => parseFloat(v).toFixed(1));
-
-    this.bindSlider('sld-wind-angle', 'val-wind-angle', (val) => {
-      this.clothSim.windAngle = parseFloat(val);
-      if (this.sceneCallbacks.updateWindAngleUI) {
-        this.sceneCallbacks.updateWindAngleUI(parseFloat(val));
-      }
-    }, (v) => `${v}°`);
-
-    const chkTurbulence = document.getElementById('chk-wind-turbulence');
-    chkTurbulence.addEventListener('change', (e) => {
-      this.clothSim.windTurbulence = e.target.checked;
-    });
+    if (chkWind) {
+      chkWind.addEventListener('change', (e) => {
+        this.clothSim.windEnabled = e.target.checked;
+      });
+    }
 
     const selRender = document.getElementById('sel-render-mode');
     selRender.addEventListener('change', (e) => {

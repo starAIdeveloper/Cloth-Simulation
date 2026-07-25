@@ -121,7 +121,7 @@ export class ClothSimulator {
 
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
-    this.spherePos = { x: 0, y: -1.2, z: 0.8 };
+    this.spherePos = { x: 0, y: -1.2, z: 2.0 };
 
     this.floorEnabled = true;
     this.floorY = -4.0;
@@ -178,13 +178,12 @@ export class ClothSimulator {
         }
 
         if (c < this.segmentsX && r < this.segmentsY) {
-          const pDiagonal1 = this.particles[getIdx(c + 1, r + 1)];
-          this.constraints.push(new ClothConstraint(pCurrent, pDiagonal1));
-        }
-        if (c > 0 && r < this.segmentsY) {
-          const pLeft = this.particles[getIdx(c, r)];
-          const pDiagonal2 = this.particles[getIdx(c - 1, r + 1)];
-          this.constraints.push(new ClothConstraint(pLeft, pDiagonal2));
+          const pDiag1 = this.particles[getIdx(c + 1, r + 1)];
+          const pRight = this.particles[getIdx(c + 1, r)];
+          const pDown = this.particles[getIdx(c, r + 1)];
+
+          this.constraints.push(new ClothConstraint(pCurrent, pDiag1));
+          this.constraints.push(new ClothConstraint(pRight, pDown));
         }
 
         if (c < this.segmentsX - 1) {
@@ -456,7 +455,7 @@ export class ClothSimulator {
       if (len > 0.00001) {
         normals[i * 3] = nx / len;
         normals[i * 3 + 1] = ny / len;
-        normals[i * 3 + 2] = len > 0 ? nz / len : 1;
+        normals[i * 3 + 2] = nz / len;
       } else {
         normals[i * 3 + 2] = 1.0;
       }

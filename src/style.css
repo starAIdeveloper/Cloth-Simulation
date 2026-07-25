@@ -30,11 +30,21 @@ html, body {
    Clean & Natural GUI Styling
    ========================================================================== */
 
-.ui-hamburger-btn {
+.ui-top-actions {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-top-actions.hidden {
+  display: none !important;
+}
+
+.ui-icon-btn, .ui-hamburger-btn {
   width: 40px;
   height: 40px;
   background: #2d323e;
@@ -47,16 +57,13 @@ html, body {
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
   transition: all 0.15s ease;
+  text-decoration: none;
 }
 
-.ui-hamburger-btn:hover {
+.ui-icon-btn:hover, .ui-hamburger-btn:hover {
   background: #3b82f6;
   border-color: #3b82f6;
   color: #ffffff;
-}
-
-.ui-hamburger-btn.hidden {
-  display: none !important;
 }
 
 .ui-window {
@@ -102,6 +109,19 @@ html, body {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.ui-header-github-btn {
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.ui-header-github-btn:hover {
+  color: #60a5fa;
 }
 
 .ui-fps-badge {

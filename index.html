@@ -13,19 +13,31 @@
   <div id="app">
     <canvas id="webgl-canvas"></canvas>
 
-    <button id="ui-toggle-btn" class="ui-hamburger-btn hidden" title="Open Settings">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
+    <div id="ui-top-actions" class="ui-top-actions hidden">
+      <a href="https://shinnei.github.io/" target="_blank" rel="noopener noreferrer" class="ui-icon-btn ui-github-btn" title="GitHub Repository">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+        </svg>
+      </a>
+      <button id="ui-toggle-btn" class="ui-hamburger-btn" title="Open Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+    </div>
 
     <div id="ui-panel" class="ui-window">
       <div class="ui-header">
         <span class="ui-title">Cloth Simulation 3D</span>
         <div class="ui-header-right">
           <span id="ui-fps" class="ui-fps-badge">60.0 FPS</span>
+          <a href="https://shinnei.github.io/" target="_blank" rel="noopener noreferrer" class="ui-header-github-btn" title="GitHub Repository">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+            </svg>
+          </a>
           <button id="ui-close-btn" class="ui-close-btn" title="Collapse Window">✕</button>
         </div>
       </div>
@@ -53,6 +65,23 @@
         </div>
 
         <div class="ui-group">
+          <div class="ui-group-title">Appearance</div>
+          
+          <div class="ui-row">
+            <label class="ui-label">Render Mode:</label>
+            <select id="sel-render-mode" class="ui-select">
+              <option value="solid" selected>Solid Fabric</option>
+              <option value="wireframe">Wireframe Mesh</option>
+            </select>
+          </div>
+
+          <div class="ui-row ui-checkbox-row">
+            <input type="checkbox" id="chk-shadows" checked class="ui-checkbox" />
+            <label for="chk-shadows" class="ui-label">Enable Shadows</label>
+          </div>
+        </div>
+
+        <div class="ui-group">
           <div class="ui-group-title">Physics Parameters</div>
           
           <div class="ui-row">
@@ -71,50 +100,9 @@
           </div>
         </div>
 
-        <div class="ui-group">
-          <div class="ui-group-title">Wind Simulation</div>
-          
-          <div class="ui-row ui-checkbox-row">
-            <input type="checkbox" id="chk-wind-enable" class="ui-checkbox" />
-            <label for="chk-wind-enable" class="ui-label">Enable Wind Force</label>
-          </div>
-
-          <div class="ui-row">
-            <label for="sld-wind-strength" class="ui-label">Wind Strength: <span id="val-wind-strength">12.0</span></label>
-            <input type="range" id="sld-wind-strength" min="0" max="50" step="1" value="12" class="ui-slider" />
-          </div>
-
-          <div class="ui-row">
-            <label for="sld-wind-angle" class="ui-label">Wind Angle: <span id="val-wind-angle">45°</span></label>
-            <input type="range" id="sld-wind-angle" min="0" max="360" step="5" value="45" class="ui-slider" />
-          </div>
-
-          <div class="ui-row ui-checkbox-row">
-            <input type="checkbox" id="chk-wind-turbulence" checked class="ui-checkbox" />
-            <label for="chk-wind-turbulence" class="ui-label">Turbulence / Gusts</label>
-          </div>
-        </div>
-
-        <div class="ui-group">
-          <div class="ui-group-title">Appearance</div>
-          
-          <div class="ui-row">
-            <label class="ui-label">Render Mode:</label>
-            <select id="sel-render-mode" class="ui-select">
-              <option value="solid" selected>Solid Fabric</option>
-              <option value="wireframe">Wireframe Mesh</option>
-            </select>
-          </div>
-
-          <div class="ui-row ui-checkbox-row">
-            <input type="checkbox" id="chk-shadows" checked class="ui-checkbox" />
-            <label for="chk-shadows" class="ui-label">Enable Shadows</label>
-          </div>
-        </div>
-
         <div class="ui-footer-tip">
-          💡 <strong>Left Mouse:</strong> Rotate camera angle / Drag sphere.<br>
-          💡 <strong>Right Mouse Drag:</strong> Rotate & adjust wind vector arrow!
+          💡 <strong>Left Mouse:</strong> Rotate camera / Drag sphere<br>
+          💡 <strong>Right Mouse Drag:</strong> Add wind
         </div>
       </div>
     </div>
