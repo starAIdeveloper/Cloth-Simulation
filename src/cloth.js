@@ -33,11 +33,9 @@ export class ClothParticle {
       return;
     }
 
-    const effectiveDamping = this.onSphere ? damping * 0.7 : damping;
-
-    const vx = (this.x - this.oldX) * effectiveDamping;
-    const vy = (this.y - this.oldY) * effectiveDamping;
-    const vz = (this.z - this.oldZ) * effectiveDamping;
+    const vx = (this.x - this.oldX) * damping;
+    const vy = (this.y - this.oldY) * damping;
+    const vz = (this.z - this.oldZ) * damping;
 
     this.oldX = this.x;
     this.oldY = this.y;
@@ -173,11 +171,11 @@ export class ClothSimulator {
 
         if (c < this.segmentsX) {
           const pRight = this.particles[getIdx(c + 1, r)];
-          this.constraints.push(new ClothConstraint(pCurrent, pRight));
+          this.constraints.push(new ClothConstraint(pCurrent, pRight, 0.95));
         }
         if (r < this.segmentsY) {
           const pDown = this.particles[getIdx(c, r + 1)];
-          this.constraints.push(new ClothConstraint(pCurrent, pDown));
+          this.constraints.push(new ClothConstraint(pCurrent, pDown, 0.95));
         }
 
         if (c < this.segmentsX && r < this.segmentsY) {
@@ -185,17 +183,17 @@ export class ClothSimulator {
           const pRight = this.particles[getIdx(c + 1, r)];
           const pDown = this.particles[getIdx(c, r + 1)];
 
-          this.constraints.push(new ClothConstraint(pCurrent, pDiag1));
-          this.constraints.push(new ClothConstraint(pRight, pDown));
+          this.constraints.push(new ClothConstraint(pCurrent, pDiag1, 0.5));
+          this.constraints.push(new ClothConstraint(pRight, pDown, 0.5));
         }
 
         if (c < this.segmentsX - 1) {
           const p2Right = this.particles[getIdx(c + 2, r)];
-          this.constraints.push(new ClothConstraint(pCurrent, p2Right));
+          this.constraints.push(new ClothConstraint(pCurrent, p2Right, 0.15));
         }
         if (r < this.segmentsY - 1) {
           const p2Down = this.particles[getIdx(c, r + 2)];
-          this.constraints.push(new ClothConstraint(pCurrent, p2Down));
+          this.constraints.push(new ClothConstraint(pCurrent, p2Down, 0.15));
         }
       }
     }
