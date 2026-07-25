@@ -362,8 +362,8 @@ export class ClothSimulator {
   applyFloorCollision(particle) {
     if (particle.pinned || !this.floorEnabled) return;
 
-    const floorMargin = 0.03;
-    const targetY = this.floorY + floorMargin;
+    const clothThicknessMargin = 0.08;
+    const targetY = this.floorY + clothThicknessMargin;
 
     if (particle.y < targetY) {
       particle.y = targetY;
@@ -430,8 +430,8 @@ export class ClothSimulator {
       p.update(dt, this.damping);
     }
 
-    const colliderMargin = 0.05;
-    const effectiveRadius = this.sphereRadius + colliderMargin;
+    const clothThicknessMargin = 0.08;
+    const effectiveRadius = this.sphereRadius + clothThicknessMargin;
 
     for (let iter = 0; iter < this.solverIterations; iter++) {
       for (let c of this.constraints) {
