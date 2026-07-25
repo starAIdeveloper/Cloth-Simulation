@@ -37,6 +37,6 @@ Cloth Simulation 3D is a real-time web-based interactive 3D cloth physics simula
 
 ## Contact Information
 
-- Author: Nguyen Huu Huy Thinh (shInNei)
-- Website: https://shinnei.github.io/
-- GitHub: https://github.com/shInNei
+- Name: Nguyen Huu Huy Thinh
+- Email: dst15092004@gmail.com
+- GitHub: https://shinnei.github.io/
