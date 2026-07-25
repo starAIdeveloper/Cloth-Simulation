@@ -25,7 +25,7 @@ Cloth Simulation 3D is a real-time web-based interactive 3D cloth physics simula
 ## Installation and Local Setup
 
 1. Clone the repository:
-   git clone https://github.com/shinnei/cloth-simulation.git
+   git clone https://github.com/shInNei/Cloth-Simulation.git
 
 2. Install dependencies:
    npm install
@@ -37,5 +37,6 @@ Cloth Simulation 3D is a real-time web-based interactive 3D cloth physics simula
 
 ## Contact Information
 
-- Author: shinnei
-- GitHub: https://shinnei.github.io/
+- Author: Nguyen Huu Huy Thinh (shInNei)
+- Website: https://shinnei.github.io/
+- GitHub: https://github.com/shInNei
