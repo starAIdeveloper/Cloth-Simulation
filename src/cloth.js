@@ -121,8 +121,7 @@ export class ClothSimulator {
 
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
-    this.spherePos = { x: 0, y: -1.2, z: 0 };
-    this.onSphereMoved = null;
+    this.spherePos = { x: 0, y: -1.2, z: 1.2 };
 
     this.floorEnabled = true;
     this.floorY = -4.0;
@@ -214,15 +213,6 @@ export class ClothSimulator {
   setPinMode(mode) {
     this.pinMode = mode;
     this.applyPinning();
-
-    if (mode === 'none') {
-      this.spherePos.x = 0;
-      this.spherePos.y = -1.2;
-      this.spherePos.z = 0;
-      if (this.onSphereMoved) {
-        this.onSphereMoved(this.spherePos);
-      }
-    }
   }
 
   applyPinning() {
@@ -295,15 +285,6 @@ export class ClothSimulator {
       particle.x = currentSpherePos.x + nx * effectiveRadius;
       particle.y = currentSpherePos.y + ny * effectiveRadius;
       particle.z = currentSpherePos.z + nz * effectiveRadius;
-
-      const friction = 0.85;
-      const vx = (particle.x - particle.oldX) * friction;
-      const vy = (particle.y - particle.oldY) * friction;
-      const vz = (particle.z - particle.oldZ) * friction;
-
-      particle.oldX = particle.x - vx;
-      particle.oldY = particle.y - vy;
-      particle.oldZ = particle.z - vz;
     }
   }
 
@@ -370,9 +351,8 @@ export class ClothSimulator {
     this.mouseWind.y *= 0.85;
     this.mouseWind.z *= 0.85;
 
-    const subDamping = Math.pow(this.damping, 1 / 6);
     for (let p of this.particles) {
-      p.update(dt, subDamping);
+      p.update(dt, this.damping);
     }
 
     const colliderMargin = 0.05;

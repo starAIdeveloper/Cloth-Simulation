@@ -216,7 +216,7 @@ const sphereMat = new THREE.MeshStandardMaterial({
   metalness: 0.7
 });
 const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-sphereMesh.position.set(0, -1.2, 0);
+sphereMesh.position.set(0, -1.2, 1.2);
 sphereMesh.castShadow = true;
 sphereMesh.receiveShadow = true;
 scene.add(sphereMesh);
