@@ -73,7 +73,8 @@ export class ClothConstraint {
     const distSq = dx * dx + dy * dy + dz * dz;
     if (distSq === 0) return;
 
-    const diff = ((distSq - this.restLengthSq) / (distSq + this.restLengthSq)) * this.stiffness;
+    const dist = Math.sqrt(distSq);
+    const diff = ((dist - this.restLength) / dist) * 0.5 * this.stiffness;
     const offsetX = dx * diff;
     const offsetY = dy * diff;
     const offsetZ = dz * diff;
