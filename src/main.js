@@ -80,7 +80,7 @@ floor.position.y = floorY;
 floor.receiveShadow = true;
 scene.add(floor);
 
-const clothSim = new ClothSimulator(8, 8, 32, 32);
+const clothSim = new ClothSimulator(8, 8, 40, 40);
 clothSim.floorY = floorY;
 
 const numParticles = clothSim.particles.length;

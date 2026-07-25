@@ -98,7 +98,7 @@ export class ClothConstraint {
 }
 
 export class ClothSimulator {
-  constructor(width = 8, height = 8, segmentsX = 32, segmentsY = 32) {
+  constructor(width = 8, height = 8, segmentsX = 40, segmentsY = 40) {
     this.width = width;
     this.height = height;
     this.segmentsX = segmentsX;
@@ -323,6 +323,37 @@ export class ClothSimulator {
       particle.y = currentSpherePos.y + ny * effectiveRadius;
       particle.z = currentSpherePos.z + nz * effectiveRadius;
       particle.onSphere = true;
+
+      const vx = particle.x - particle.oldX;
+      const vy = particle.y - particle.oldY;
+      const vz = particle.z - particle.oldZ;
+
+      const dotN = vx * nx + vy * ny + vz * nz;
+      let vtx = vx - dotN * nx;
+      let vty = vy - dotN * ny;
+      let vtz = vz - dotN * nz;
+
+      const vtLen = Math.hypot(vtx, vty, vtz);
+
+      const frictionMu = 0.85;
+      vtx *= (1 - frictionMu);
+      vty *= (1 - frictionMu);
+      vtz *= (1 - frictionMu);
+
+      if (vtLen < 0.02) {
+        vtx = 0;
+        vty = 0;
+        vtz = 0;
+      }
+
+      const vn = dotN < 0 ? 0 : dotN;
+      const finalVx = nx * vn + vtx;
+      const finalVy = ny * vn + vty;
+      const finalVz = nz * vn + vtz;
+
+      particle.oldX = particle.x - finalVx;
+      particle.oldY = particle.y - finalVy;
+      particle.oldZ = particle.z - finalVz;
     }
   }
 
