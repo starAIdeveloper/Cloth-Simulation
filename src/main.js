@@ -216,7 +216,7 @@ const sphereMat = new THREE.MeshStandardMaterial({
   metalness: 0.7
 });
 const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-sphereMesh.position.set(0, -1.2, 2.0);
+sphereMesh.position.set(0, -1.2, 0);
 sphereMesh.castShadow = true;
 sphereMesh.receiveShadow = true;
 scene.add(sphereMesh);
@@ -225,6 +225,9 @@ clothSim.sphereRadius = 1.8;
 clothSim.spherePos.x = sphereMesh.position.x;
 clothSim.spherePos.y = sphereMesh.position.y;
 clothSim.spherePos.z = sphereMesh.position.z;
+clothSim.onSphereMoved = (pos) => {
+  sphereMesh.position.set(pos.x, pos.y, pos.z);
+};
 
 // Thick 3D Drag Wind Arrow Mesh (Shaft + Cone Tip)
 const arrowMaterial = new THREE.MeshStandardMaterial({

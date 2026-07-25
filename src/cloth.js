@@ -121,7 +121,8 @@ export class ClothSimulator {
 
     this.sphereEnabled = true;
     this.sphereRadius = 1.8;
-    this.spherePos = { x: 0, y: -1.2, z: 2.0 };
+    this.spherePos = { x: 0, y: -1.2, z: 0 };
+    this.onSphereMoved = null;
 
     this.floorEnabled = true;
     this.floorY = -4.0;
@@ -213,6 +214,15 @@ export class ClothSimulator {
   setPinMode(mode) {
     this.pinMode = mode;
     this.applyPinning();
+
+    if (mode === 'none') {
+      this.spherePos.x = 0;
+      this.spherePos.y = -1.2;
+      this.spherePos.z = 0;
+      if (this.onSphereMoved) {
+        this.onSphereMoved(this.spherePos);
+      }
+    }
   }
 
   applyPinning() {
@@ -274,7 +284,7 @@ export class ClothSimulator {
     const distSq = dx * dx + dy * dy + dz * dz;
     if (distSq < effectiveRadius * effectiveRadius) {
       const dist = Math.sqrt(distSq);
-      let nx = 0, ny = 0, nz = 1;
+      let nx = 0, ny = 1, nz = 0;
 
       if (dist > 0.0001) {
         nx = dx / dist;
@@ -286,16 +296,14 @@ export class ClothSimulator {
       particle.y = currentSpherePos.y + ny * effectiveRadius;
       particle.z = currentSpherePos.z + nz * effectiveRadius;
 
-      const vx = particle.x - particle.oldX;
-      const vy = particle.y - particle.oldY;
-      const vz = particle.z - particle.oldZ;
-      const inwardDot = vx * nx + vy * ny + vz * nz;
+      const friction = 0.85;
+      const vx = (particle.x - particle.oldX) * friction;
+      const vy = (particle.y - particle.oldY) * friction;
+      const vz = (particle.z - particle.oldZ) * friction;
 
-      if (inwardDot < 0) {
-        particle.oldX = particle.x;
-        particle.oldY = particle.y;
-        particle.oldZ = particle.z;
-      }
+      particle.oldX = particle.x - vx;
+      particle.oldY = particle.y - vy;
+      particle.oldZ = particle.z - vz;
     }
   }
 
@@ -362,8 +370,9 @@ export class ClothSimulator {
     this.mouseWind.y *= 0.85;
     this.mouseWind.z *= 0.85;
 
+    const subDamping = Math.pow(this.damping, 1 / 6);
     for (let p of this.particles) {
-      p.update(dt, this.damping);
+      p.update(dt, subDamping);
     }
 
     const colliderMargin = 0.05;
